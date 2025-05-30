@@ -13,6 +13,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   }
 
+
+
   const diagramTitle = root.dataset.title || "Diagrama";
 
   if (!svgPath) {
