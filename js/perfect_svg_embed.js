@@ -173,7 +173,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   const canvas = document.getElementById("canvas-area");
   canvas.appendChild(svg);
 
-  // 🟢 SUPORTE A TOUCH (PAN e PINCH ZOOM)
+  // SUPORTE A TOUCH (PAN e PINCH ZOOM)
 let lastTouchDist = null;
 
 canvas.addEventListener("touchstart", (e) => {
@@ -236,7 +236,8 @@ canvas.addEventListener("touchend", (e) => {
   const getScrollFromDisplayedPercentage = (percentage) => Math.log(100 / percentage) / Math.log(1.05) * 100;
 
   const updateViewBox = () => svg.setAttribute("viewBox", `${offsetX} ${offsetY} ${viewWidth} ${viewHeight}`);
-  const updateZoomLabel = () => document.getElementById("zoom-label").textContent = currentDisplayedPercentage + "%";
+  const updateZoomLabel = () => document.getElementById("zoom-label").textContent = Math.round(currentDisplayedPercentage) + "%";
+
 
   const simulateZoom = (percentageChange) => {
     const newPercentage = currentDisplayedPercentage + percentageChange;
