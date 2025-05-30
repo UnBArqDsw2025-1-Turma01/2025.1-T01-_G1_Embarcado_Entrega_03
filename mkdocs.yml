@@ -59,3 +59,5 @@ nav:
       - 3.5. Iniciativas Extras - Padrões de Projeto: PadroesDeProjeto/3.5.IniciativasExtras.md
 
 
+extra_javascript:
+  - js/perfect_svg_embed.js
