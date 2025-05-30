@@ -1,0 +1,61 @@
+site_name: G1 Embarcado - Entrega 03
+repo_url: https://github.com/UnBArqDsw2025-1-Turma01/2025.1-T01-_G1_Embarcado_Entrega_03
+repo_name: 2025.1-T01-_G1_Embarcado_Entrega_03
+
+plugins:
+  - search
+  - mermaid2
+
+theme:
+  name: material
+  features:
+    - navigation.instant
+    - navigation.tracking
+    - navigation.tabs
+    - navigation.tabs.sticky
+    - navigation.top
+    - navigation.footer
+    - navigation.sections        
+    - navigation.expand
+    - toc.integrate
+    - search.suggest
+    - search.highlight
+    - content.code.annotate
+    - content.code.copy
+    - header.autohide
+    - announce.dismiss
+
+  language: pt-BR
+  font:
+    text: Roboto Mono
+    code: Roboto Mono
+    heading: Montserrat
+
+  palette:
+    - scheme: default
+      primary: deep purple
+      accent: deep orange
+      toggle:
+        icon: material/brightness-5 
+        name: Switch to dark mode
+
+    - scheme: slate
+      primary: deep purple
+      accent: deep orange
+      toggle:
+        icon: material/brightness-2
+        name: Switch to light mode
+
+nav:
+  - Home: index.md
+  - Projetos:
+      - Projeto: Projeto/Projeto.md
+  - Padrões de Projeto:
+      - 3. Desenho de Software (Padrões de Projeto): PadroesDeProjeto/3.PadroesDeProjeto.md
+      - 3.1. Padrões de Projeto GoFs Criacionais: PadroesDeProjeto/3.1.GoFsCriacionais.md
+      - 3.2. Padrões de Projeto GoFs Estruturais: PadroesDeProjeto/3.2.GoFsEstruturais.md
+      - 3.3. Padrões de Projeto GoFs Comportamentais: PadroesDeProjeto/3.3.GoFsComportamentais.md
+      - 3.4. Participações - Padrões de Projeto: PadroesDeProjeto/3.4.ParticipacoesPadroes.md
+      - 3.5. Iniciativas Extras - Padrões de Projeto: PadroesDeProjeto/3.5.IniciativasExtras.md
+
+
