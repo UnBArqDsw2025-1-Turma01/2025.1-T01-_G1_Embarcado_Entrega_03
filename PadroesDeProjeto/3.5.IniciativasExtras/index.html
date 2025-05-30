@@ -597,6 +597,19 @@
         
       
       
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    3.5. Iniciativas Extras - Padrões de Projeto
+    
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
       <a href="./" class="md-nav__link md-nav__link--active">
         
   
@@ -608,6 +621,85 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Índice">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Índice
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#entidades-principais-e-seus-papeis" class="md-nav__link">
+    <span class="md-ellipsis">
+      Entidades Principais e Seus Papéis
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#fluxo-de-comportamento" class="md-nav__link">
+    <span class="md-ellipsis">
+      Fluxo de Comportamento
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Fluxo de Comportamento">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#criacao-e-processamento-de-monitoramento" class="md-nav__link">
+    <span class="md-ellipsis">
+      Criação e Processamento de Monitoramento
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#deteccao-de-queda-e-notificacao-padrao-observer" class="md-nav__link">
+    <span class="md-ellipsis">
+      Detecção de Queda e Notificação (Padrão Observer)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#envio-de-notificacoes-padrao-strategy" class="md-nav__link">
+    <span class="md-ellipsis">
+      Envio de Notificações (Padrão Strategy)
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#relacoes-e-dependencias-chave" class="md-nav__link">
+    <span class="md-ellipsis">
+      Relações e Dependências Chave
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
       
     </li>
   
@@ -643,6 +735,51 @@
 <h1 id="35-iniciativas-extras-padroes-de-projeto">3.5. Iniciativas Extras (Padrões de Projeto)</h1>
 <p>Breve relato sobre as Iniciativas Extras realizadas pela equipe, no escopo da entrega.</p>
 <p>Apresentar links para comprobatórios que evidenciem qualquer que seja a realização extra conferida pela equipe no escopo da entrega.</p>
+<hr />
+<div id="svg-root" data-svg="/test.svg" data-title="Diagrama" style="height: 70vh;"></div>
+
+<h2 id="entidades-principais-e-seus-papeis">Entidades Principais e Seus Papéis</h2>
+<p>O sistema é centrado em algumas <strong>entidades principais</strong>:</p>
+<ul>
+<li><strong>Pessoa</strong>: Uma classe abstrata que serve como base para <strong>PessoaCuidador</strong> e <strong>PessoaMonitorada</strong>, definindo atributos comuns como nome, gênero, CPF e data de nascimento. Cada pessoa tem um <strong>Contato</strong> e um <strong>Endereço</strong> associados.</li>
+<li><strong>Pessoa Monitorada</strong>: Representa o indivíduo que está sendo monitorado. Pode ter um histórico de <strong>Monitoramentos</strong>, e sua situação atual pode ser verificada. Uma Pessoa Monitorada utiliza um ou mais <strong>Sensores</strong>.</li>
+<li><strong>Pessoa Cuidador</strong>: O indivíduo responsável por monitorar uma ou mais <strong>Pessoas Monitoradas</strong>. Recebe <strong>Notificações</strong> e pode confirmar seu recebimento.</li>
+<li><strong>Sensor</strong>: Um dispositivo que coleta dados para o monitoramento, com atributos como ID, tipo e localização. É crucial que esteja calibrado para leituras precisas.</li>
+<li><strong>Monitoramento</strong>: Representa um registro de dados coletados por um <strong>Sensor</strong> em um determinado momento, incluindo a situação detectada (ex: "QuedaDetectada", "TudoBem"), variações de graus e tempo parado. Cada monitoramento está associado a um <strong>ResultadoAnalise</strong>.</li>
+<li><strong>ResultadoAnalise</strong>: Contém o resultado da análise de um monitoramento, indicando o risco de queda, se deve notificar e a situação final.</li>
+<li><strong>Notificacao</strong>: Objeto que encapsula os detalhes de um alerta (prioridade, estado, tipo de alerta) a ser enviado a um <strong>PessoaCuidador</strong>, utilizando um padrão Strategy para o método de envio.</li>
+</ul>
+<hr />
+<h2 id="fluxo-de-comportamento">Fluxo de Comportamento</h2>
+<p>O comportamento do sistema pode ser compreendido através dos seguintes fluxos:</p>
+<h3 id="criacao-e-processamento-de-monitoramento">Criação e Processamento de Monitoramento</h3>
+<ul>
+<li>O <strong>ServicoMonitoramento</strong> é o ponto central. Ele pode <strong>criarMonitoramento</strong> a partir de um cuidador, uma pessoa monitorada e um sensor.</li>
+<li>O método <strong>processarMonitoramento</strong> é invocado para analisar os dados. Ele utiliza o <strong>ServicoQueda</strong> e o <strong>AnalisadorPostura</strong> para determinar se uma queda ocorreu.</li>
+<li>O <strong>ServicoQueda</strong> utiliza o <strong>SensorValidator</strong> para garantir que o sensor está calibrado antes de analisar os dados e gerar um <strong>ResultadoAnalise</strong>.</li>
+<li>O <strong>AnalisadorPostura</strong> calcula variações de ângulo e tempo parado a partir dos dados do sensor.</li>
+</ul>
+<h3 id="deteccao-de-queda-e-notificacao-padrao-observer">Detecção de Queda e Notificação (Padrão Observer)</h3>
+<ul>
+<li>Quando o <strong>ServicoMonitoramento</strong> processa um <strong>Monitoramento</strong> e o <strong>ResultadoAnalise</strong> indica uma situação crítica (ex: "QuedaDetectada"), ele atua como um "Subject" ou "Publisher" no padrão Observer.</li>
+<li>Ele <strong>notificaObservadores</strong> (implementações da interface <strong>ListenerQueda</strong>).</li>
+<li>O <strong>NotificadorCuidador</strong> (um observador) é acionado e, por sua vez, cria uma <strong>Notificacao</strong> baseada no <strong>ResultadoAnalise</strong> para o <strong>PessoaCuidador</strong> associado.</li>
+<li>O <strong>RegistradorLog</strong> (outro observador) também é acionado para registrar o evento de queda no sistema.</li>
+</ul>
+<h3 id="envio-de-notificacoes-padrao-strategy">Envio de Notificações (Padrão Strategy)</h3>
+<ul>
+<li>A <strong>Notificacao</strong> é configurada com uma estratégia de envio (ex: SMS, Email, Push) definida pelo atributo <strong>tipoAlerta</strong>.</li>
+<li>Quando o método <strong>enviar()</strong> da <strong>Notificacao</strong> é chamado, ela delega a tarefa à sua <strong>estrategia</strong> de envio (implementação de <strong>IEnvio</strong>).</li>
+<li>As classes <strong>EstrategiaSMS</strong>, <strong>EstrategiaEmail</strong>, e <strong>EstrategiaPush</strong> implementam a lógica específica para enviar notificações via seus respectivos canais.</li>
+<li>O <strong>PessoaCuidador</strong> tem um método <strong>receberNotificacao</strong> e <strong>confirmarRecebimento</strong>.</li>
+</ul>
+<hr />
+<h2 id="relacoes-e-dependencias-chave">Relações e Dependências Chave</h2>
+<ul>
+<li><strong>Associações</strong>: Pessoas (<strong>Cuidador</strong> e <strong>Monitorada</strong>) se associam a <strong>Contato</strong> e <strong>Endereço</strong>. Uma <strong>Pessoa Monitorada</strong> possui histórico de <strong>Monitoramentos</strong> e é monitorada por um ou mais <strong>Pessoas Cuidadoras</strong>. <strong>Pessoas Monitoradas</strong> utilizam <strong>Sensores</strong>.</li>
+<li><strong>Dependências</strong>: O <strong>ServicoMonitoramento</strong> depende de <strong>ServicoQueda</strong>, <strong>AnalisadorPostura</strong>, <strong>Notificacao</strong>, <strong>Monitoramento</strong>, <strong>PessoaCuidador</strong> e <strong>PessoaMonitorada</strong>. O <strong>ServicoQueda</strong> depende do <strong>SensorValidator</strong> e gera <strong>ResultadoAnalise</strong>.</li>
+<li><strong>Herança</strong>: <strong>PessoaCuidador</strong> e <strong>PessoaMonitorada</strong> herdam de <strong>Pessoa</strong>. As estratégias de envio (<strong>EstrategiaSMS</strong>, <strong>EstrategiaEmail</strong>, <strong>EstrategiaPush</strong>) implementam a interface <strong>IEnvio</strong>. Os ouvintes de queda (<strong>NotificadorCuidador</strong>, <strong>RegistradorLog</strong>) implementam a interface <strong>ListenerQueda</strong>.</li>
+</ul>
 
 
 
@@ -725,6 +862,8 @@
     
     
       <script src="../../assets/javascripts/bundle.13a4f30d.min.js"></script>
+      
+        <script src="../../js/perfect_svg_embed.js"></script>
       
     
   </body>
