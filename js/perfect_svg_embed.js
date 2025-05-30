@@ -93,14 +93,12 @@ document.addEventListener("DOMContentLoaded", async () => {
 
       .toolbar-top,
       .toolbar-bottom {
-        height: 48px;
-        display: flex;
-        align-items: center;
-        padding: 0 12px;
-        box-sizing: border-box;
-        background-color: var(--md-primary-fg-color);
-        color: var(--md-primary-bg-color);
+        border-top: 1px solid var(--md-primary-bg-color-light);
+        justify-content: space-between;
+        flex-wrap: wrap; /* <-- permite quebrar linha se necessário */
+        gap: 8px;
       }
+
 
       .toolbar-top {
         border-bottom: 1px solid var(--md-primary-bg-color-light);
@@ -142,8 +140,10 @@ document.addEventListener("DOMContentLoaded", async () => {
       .button-group, .coord-group {
         display: flex;
         align-items: center;
-        gap: 12px;
+        gap: 8px;
+        flex-wrap: wrap; /* <-- permite os botões quebrarem linha no mobile */
       }
+
     </style>
 
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
@@ -236,12 +236,14 @@ canvas.addEventListener("touchend", (e) => {
   const getScrollFromDisplayedPercentage = (percentage) => Math.log(100 / percentage) / Math.log(1.05) * 100;
 
   const updateViewBox = () => svg.setAttribute("viewBox", `${offsetX} ${offsetY} ${viewWidth} ${viewHeight}`);
-  const updateZoomLabel = () => document.getElementById("zoom-label").textContent = Math.round(currentDisplayedPercentage) + "%";
+  const updateZoomLabel = () => {
+  document.getElementById("zoom-label").textContent = Math.round(currentDisplayedPercentage) + "%";};
+
 
 
   const simulateZoom = (percentageChange) => {
-    const newPercentage = currentDisplayedPercentage + percentageChange;
-    if (newPercentage < 25 || newPercentage > 400) return;
+    let newPercentage = currentDisplayedPercentage + percentageChange;
+    newPercentage = Math.max(25, Math.min(400, newPercentage)); // Limita entre 25% e 400%
     const newScroll = getScrollFromDisplayedPercentage(newPercentage);
     const scale = zoomFactor(newScroll) / zoomFactor(scroll);
     const centerX = offsetX + viewWidth / 2;
