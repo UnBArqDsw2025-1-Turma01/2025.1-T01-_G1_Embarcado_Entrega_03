@@ -2,7 +2,17 @@ document.addEventListener("DOMContentLoaded", async () => {
   const root = document.getElementById("svg-root");
   if (!root) return;
 
-  const svgPath = root.dataset.svg;
+  let svgPath = root.dataset.svg;
+
+  // Corrige caminho se estiver rodando em GitHub Pages e o caminho começa com "/"
+  if (svgPath.startsWith("/")) {
+    const isGitHubPages = window.location.hostname.includes("github.io");
+    if (isGitHubPages) {
+      const repoName = window.location.pathname.split("/")[1];
+      svgPath = `/${repoName}${svgPath}`;
+    }
+  }
+
   const diagramTitle = root.dataset.title || "Diagrama";
 
   if (!svgPath) {
