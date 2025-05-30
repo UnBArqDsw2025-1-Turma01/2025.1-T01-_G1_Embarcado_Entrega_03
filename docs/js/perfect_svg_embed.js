@@ -29,11 +29,21 @@ document.addEventListener("DOMContentLoaded", async () => {
   root.innerHTML = `
     <style>
       @keyframes feedback-glow {
-        0% { transform: scale(1); text-shadow: none; }
-        50% { transform: scale(1.15); text-shadow: 0 0 4px var(--md-accent-fg-color); }
-        100% { transform: scale(1); text-shadow: none; }
+        0% {
+          transform: scale(1);
+          text-shadow: none;
+        }
+        50% {
+          transform: scale(1.15);
+          text-shadow: 0 0 4px var(--md-accent-fg-color);
+        }
+        100% {
+          transform: scale(1);
+          text-shadow: none;
+        }
       }
 
+      /* Botão visual */
       .icon-btn {
         width: 40px;
         height: 40px;
@@ -59,7 +69,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         height: 24px;
         line-height: 24px;
         display: block;
-        color: inherit;
+        color: var(--md-primary-bg-color);
         transition: transform 0.2s ease, color 0.2s ease;
       }
 
@@ -67,45 +77,47 @@ document.addEventListener("DOMContentLoaded", async () => {
         animation: feedback-glow 0.25s ease;
       }
 
+      .icon-btn:hover .material-icons {
+        color: var(--md-accent-fg-color);
+      }
+
+      /* Container SVG e toolbars */
       #svg-container {
         border: 1px solid var(--md-default-fg-color--lighter);
         background-color: var(--md-default-bg-color);
       }
 
       #canvas-area {
-        touch-action: none;
+        touch-action: none; /* evita rolagem acidental no mobile */
       }
 
       .toolbar-top,
       .toolbar-bottom {
-        min-height: 48px;
+        height: 48px;
         display: flex;
         align-items: center;
-        padding: 8px 12px;
+        padding: 0 12px;
         box-sizing: border-box;
-        flex-wrap: wrap;
+        background-color: var(--md-primary-fg-color);
+        color: var(--md-primary-bg-color);
       }
 
       .toolbar-top {
         border-bottom: 1px solid var(--md-primary-bg-color-light);
-        justify-content: center;
-        background-color: var(--md-primary-fg-color);
-        color: var(--md-primary-bg-color);
+        justify-content: center; /* Centraliza o título */
       }
+
 
       .toolbar-bottom {
         border-top: 1px solid var(--md-primary-bg-color-light);
         justify-content: space-between;
-        background-color: var(--md-primary-fg-color);
-        color: var(--md-primary-bg-color);
-        gap: 8px;
       }
 
       #diagram-title {
         font-family: var(--md-text-font-family);
         font-size: 0.875rem;
         font-weight: 500;
-        line-height: 48px;
+        line-height: 48px; /* Igual à altura da toolbar */
         height: 100%;
         display: flex;
         align-items: center;
@@ -113,6 +125,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         white-space: nowrap;
         color: inherit;
       }
+
 
       #zoom-label {
         font-family: var(--md-text-font-family);
@@ -129,10 +142,10 @@ document.addEventListener("DOMContentLoaded", async () => {
       .button-group, .coord-group {
         display: flex;
         align-items: center;
-        gap: 8px;
-        flex-wrap: wrap;
+        gap: 12px;
       }
     </style>
+
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 
     <div id="svg-container" style="width:100%; height:100%; display:flex; flex-direction:column; cursor:grab;">
@@ -160,6 +173,55 @@ document.addEventListener("DOMContentLoaded", async () => {
   const canvas = document.getElementById("canvas-area");
   canvas.appendChild(svg);
 
+  // SUPORTE A TOUCH (PAN e PINCH ZOOM)
+let lastTouchDist = null;
+
+canvas.addEventListener("touchstart", (e) => {
+  if (e.touches.length === 1) {
+    isPanning = true;
+    startX = e.touches[0].clientX;
+    startY = e.touches[0].clientY;
+  }
+});
+
+canvas.addEventListener("touchmove", (e) => {
+  if (e.touches.length === 1 && isPanning) {
+    const dx = e.touches[0].clientX - startX;
+    const dy = e.touches[0].clientY - startY;
+    startX = e.touches[0].clientX;
+    startY = e.touches[0].clientY;
+    const rect = svg.getBoundingClientRect();
+    offsetX -= (dx / rect.width) * viewWidth;
+    offsetY -= (dy / rect.height) * viewHeight;
+    updateViewBox();
+    e.preventDefault();
+  }
+
+  // Pinch Zoom com dois dedos
+  if (e.touches.length === 2) {
+    const touch1 = e.touches[0];
+    const touch2 = e.touches[1];
+    const dist = Math.hypot(
+      touch2.clientX - touch1.clientX,
+      touch2.clientY - touch1.clientY
+    );
+
+    if (lastTouchDist !== null) {
+      const delta = dist - lastTouchDist;
+      simulateZoom(delta * 0.2); // ajuste a sensibilidade
+    }
+
+    lastTouchDist = dist;
+    e.preventDefault();
+  }
+});
+
+canvas.addEventListener("touchend", (e) => {
+  isPanning = false;
+  if (e.touches.length < 2) lastTouchDist = null;
+});
+
+
   let scroll = 0;
   let currentDisplayedPercentage = 100;
   let offsetX = 0;
@@ -169,17 +231,19 @@ document.addEventListener("DOMContentLoaded", async () => {
   let isPanning = false;
   let startX = 0;
   let startY = 0;
-  let lastTouchDist = null;
 
   const zoomFactor = (s) => Math.pow(1.05, s / 100);
   const getScrollFromDisplayedPercentage = (percentage) => Math.log(100 / percentage) / Math.log(1.05) * 100;
 
   const updateViewBox = () => svg.setAttribute("viewBox", `${offsetX} ${offsetY} ${viewWidth} ${viewHeight}`);
-  const updateZoomLabel = () => document.getElementById("zoom-label").textContent = Math.round(currentDisplayedPercentage) + "%";
+  const updateZoomLabel = () => {
+  document.getElementById("zoom-label").textContent = Math.round(currentDisplayedPercentage) + "%";};
+
+
 
   const simulateZoom = (percentageChange) => {
     let newPercentage = currentDisplayedPercentage + percentageChange;
-    newPercentage = Math.max(25, Math.min(400, newPercentage));
+    newPercentage = Math.max(25, Math.min(400, newPercentage)); // Limita entre 25% e 400%
     const newScroll = getScrollFromDisplayedPercentage(newPercentage);
     const scale = zoomFactor(newScroll) / zoomFactor(scroll);
     const centerX = offsetX + viewWidth / 2;
@@ -194,7 +258,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     updateZoomLabel();
   };
 
-  // Mouse zoom e pan
   canvas.addEventListener("wheel", (e) => {
     e.preventDefault();
     const delta = e.deltaY > 0 ? -5 : 5;
@@ -225,48 +288,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     offsetX -= (dx / rect.width) * viewWidth;
     offsetY -= (dy / rect.height) * viewHeight;
     updateViewBox();
-  });
-
-  // Touch zoom e pan
-  canvas.addEventListener("touchstart", (e) => {
-    if (e.touches.length === 1) {
-      isPanning = true;
-      startX = e.touches[0].clientX;
-      startY = e.touches[0].clientY;
-    }
-  });
-
-  canvas.addEventListener("touchmove", (e) => {
-    if (e.touches.length === 1 && isPanning) {
-      const dx = e.touches[0].clientX - startX;
-      const dy = e.touches[0].clientY - startY;
-      startX = e.touches[0].clientX;
-      startY = e.touches[0].clientY;
-      const rect = svg.getBoundingClientRect();
-      offsetX -= (dx / rect.width) * viewWidth;
-      offsetY -= (dy / rect.height) * viewHeight;
-      updateViewBox();
-      e.preventDefault();
-    }
-
-    if (e.touches.length === 2) {
-      const touch1 = e.touches[0];
-      const touch2 = e.touches[1];
-      const dist = Math.hypot(touch2.clientX - touch1.clientX, touch2.clientY - touch1.clientY);
-
-      if (lastTouchDist !== null) {
-        const delta = dist - lastTouchDist;
-        simulateZoom(delta * 0.2);
-      }
-
-      lastTouchDist = dist;
-      e.preventDefault();
-    }
-  });
-
-  canvas.addEventListener("touchend", (e) => {
-    isPanning = false;
-    if (e.touches.length < 2) lastTouchDist = null;
   });
 
   const darFeedbackVisual = (btn) => {
