@@ -87,6 +87,10 @@ document.addEventListener("DOMContentLoaded", async () => {
         background-color: var(--md-default-bg-color);
       }
 
+      #canvas-area {
+        touch-action: none; /* evita rolagem acidental no mobile */
+      }
+
       .toolbar-top,
       .toolbar-bottom {
         height: 48px;
@@ -168,6 +172,55 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   const canvas = document.getElementById("canvas-area");
   canvas.appendChild(svg);
+
+  // 🟢 SUPORTE A TOUCH (PAN e PINCH ZOOM)
+let lastTouchDist = null;
+
+canvas.addEventListener("touchstart", (e) => {
+  if (e.touches.length === 1) {
+    isPanning = true;
+    startX = e.touches[0].clientX;
+    startY = e.touches[0].clientY;
+  }
+});
+
+canvas.addEventListener("touchmove", (e) => {
+  if (e.touches.length === 1 && isPanning) {
+    const dx = e.touches[0].clientX - startX;
+    const dy = e.touches[0].clientY - startY;
+    startX = e.touches[0].clientX;
+    startY = e.touches[0].clientY;
+    const rect = svg.getBoundingClientRect();
+    offsetX -= (dx / rect.width) * viewWidth;
+    offsetY -= (dy / rect.height) * viewHeight;
+    updateViewBox();
+    e.preventDefault();
+  }
+
+  // Pinch Zoom com dois dedos
+  if (e.touches.length === 2) {
+    const touch1 = e.touches[0];
+    const touch2 = e.touches[1];
+    const dist = Math.hypot(
+      touch2.clientX - touch1.clientX,
+      touch2.clientY - touch1.clientY
+    );
+
+    if (lastTouchDist !== null) {
+      const delta = dist - lastTouchDist;
+      simulateZoom(delta * 0.2); // ajuste a sensibilidade
+    }
+
+    lastTouchDist = dist;
+    e.preventDefault();
+  }
+});
+
+canvas.addEventListener("touchend", (e) => {
+  isPanning = false;
+  if (e.touches.length < 2) lastTouchDist = null;
+});
+
 
   let scroll = 0;
   let currentDisplayedPercentage = 100;
