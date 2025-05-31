@@ -359,24 +359,28 @@ document.addEventListener("DOMContentLoaded", async () => {
   });
 })
 
+
 // === IMAGE EMBED CODE ===
 document.addEventListener("DOMContentLoaded", async () => {
-  const root = document.getElementById("image-root");
-  if (!root) {
+  const imageRoot = document.getElementById("image-root");
+  if (!imageRoot) {
     console.error("Elemento com ID 'image-root' não encontrado.");
     return;
   }
 
-  const imagePath = root.dataset.image;
-  const imageTitle = root.dataset.title || "Imagem";
+  const imagePath = imageRoot.dataset.image;
+  const imageTitle = imageRoot.dataset.title || "Imagem";
 
   if (!imagePath) {
-    root.innerHTML = "<p style='color: red;'>Atributo data-image não definido no elemento image-root.</p>";
+    imageRoot.innerHTML = "<p style='color: red;'>Atributo data-image não definido no elemento image-root.</p>";
     return;
   }
 
+  // Define um ID único para a imagem dentro do contêiner
+  const uniqueImageId = `my-image-${Math.random().toString(36).substr(2, 9)}`;
+
   // Inject CSS and HTML structure dynamically
-  root.innerHTML = `
+  imageRoot.innerHTML = `
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <style>
       @keyframes feedback-glow {
@@ -414,7 +418,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         animation: feedback-glow 0.25s ease;
       }
 
-      #image-container {
+      .image-container-unique { /* Usar uma classe ou ID gerado dinamicamente para o contêiner */
         border: 1px solid var(--md-default-fg-color--lighter);
         background-color: var(--md-default-bg-color);
       }
@@ -444,14 +448,14 @@ document.addEventListener("DOMContentLoaded", async () => {
         gap: 8px;
       }
 
-      #image-title {
+      .image-title-unique { /* Classe para o título da imagem */
         font-family: var(--md-text-font-family);
         font-size: 0.9rem;
         font-weight: bold;
         color: inherit;
       }
 
-      #zoom-label, #coord-display {
+      .image-zoom-label-unique, .image-coord-display-unique { /* Classes para o label de zoom e display de coordenadas */
         font-family: var(--md-text-font-family);
         font-size: 0.64rem;
         font-weight: bold;
@@ -469,26 +473,26 @@ document.addEventListener("DOMContentLoaded", async () => {
         .button-group, .coord-group { flex-wrap: wrap; gap: 4px; }
         .icon-btn { width: 32px; height: 32px; }
         .icon-btn .material-icons { font-size: 1rem; }
-        #zoom-label, #coord-display { font-size: 0.5rem; }
-        #image-title { font-size: 0.8rem; }
+        .image-zoom-label-unique, .image-coord-display-unique { font-size: 0.5rem; }
+        .image-title-unique { font-size: 0.8rem; }
       }
     </style>
 
-    <div id="image-container" style="width:100%; height:100%; display:flex; flex-direction:column;">
-      <div class="toolbar-top"><span id="image-title">${imageTitle}</span></div>
-      <div id="canvas-area" style="flex:1; overflow:hidden; position:relative; display:flex; justify-content:center; align-items:center;"></div>
+    <div id="image-container-${uniqueImageId}" class="image-container-unique" style="width:100%; height:100%; display:flex; flex-direction:column;">
+      <div class="toolbar-top"><span id="image-title-${uniqueImageId}" class="image-title-unique">${imageTitle}</span></div>
+      <div id="canvas-area-${uniqueImageId}" style="flex:1; overflow:hidden; position:relative; display:flex; justify-content:center; align-items:center;"></div>
       <div class="toolbar-bottom">
         <div class="button-group">
-          <button class="icon-btn" id="btn-zoom-out" title="Reduzir Zoom"><span class="material-icons">remove</span></button>
-          <span id="zoom-label">100%</span>
-          <button class="icon-btn" id="btn-zoom-in" title="Aumentar Zoom"><span class="material-icons">add</span></button>
-          <button class="icon-btn" id="btn-reset" title="Resetar Zoom"><span class="material-icons">refresh</span></button>
-          <button class="icon-btn" id="btn-center" title="Centralizar"><span class="material-icons">center_focus_strong</span></button>
+          <button class="icon-btn" id="btn-image-zoom-out-${uniqueImageId}" title="Reduzir Zoom"><span class="material-icons">remove</span></button>
+          <span id="image-zoom-label-${uniqueImageId}" class="image-zoom-label-unique">100%</span>
+          <button class="icon-btn" id="btn-image-zoom-in-${uniqueImageId}" title="Aumentar Zoom"><span class="material-icons">add</span></button>
+          <button class="icon-btn" id="btn-image-reset-${uniqueImageId}" title="Resetar Zoom"><span class="material-icons">refresh</span></button>
+          <button class="icon-btn" id="btn-image-center-${uniqueImageId}" title="Centralizar"><span class="material-icons">center_focus_strong</span></button>
         </div>
         <div class="coord-group">
-          <span id="coord-display"></span>
-          <button class="icon-btn" id="btn-download" title="Download"><span class="material-icons">download</span></button>
-          <button class="icon-btn" id="btn-fullscreen" title="Tela cheia"><span class="material-icons">fullscreen</span></button>
+          <span id="image-coord-display-${uniqueImageId}" class="image-coord-display-unique"></span>
+          <button class="icon-btn" id="btn-image-download-${uniqueImageId}" title="Download"><span class="material-icons">download</span></button>
+          <button class="icon-btn" id="btn-image-fullscreen-${uniqueImageId}" title="Tela cheia"><span class="material-icons">fullscreen</span></button>
         </div>
       </div>
     </div>
@@ -496,90 +500,91 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   const img = new Image();
   img.src = imagePath;
-  img.id = "my-image";
+  img.id = uniqueImageId; // Usa o ID único para a imagem
   img.style.objectFit = "contain";
   img.style.transformOrigin = "center";
   img.style.willChange = "transform";
   img.style.transition = "transform 0.05s ease-out"; // Smooth transition for transform
 
-  const canvas = document.getElementById("canvas-area");
-  if (!canvas) {
+  const imageCanvas = document.getElementById(`canvas-area-${uniqueImageId}`);
+  if (!imageCanvas) {
     console.error("Elemento com ID 'canvas-area' não encontrado após injeção de HTML.");
     return;
   }
-  canvas.appendChild(img);
+  imageCanvas.appendChild(img);
 
   await new Promise((resolve, reject) => {
     img.onload = resolve;
     img.onerror = reject;
   }).catch(() => {
-    root.innerHTML = `<p style='color: red;'>Erro ao carregar a imagem: ${imagePath}</p>`;
+    imageRoot.innerHTML = `<p style='color: red;'>Erro ao carregar a imagem: ${imagePath}</p>`;
     return; // Exit if image fails to load
   });
 
-  let currentZoom = 100;
-  let panX = 0;
-  let panY = 0;
-  let isPanning = false;
-  let startX = 0;
-  let startY = 0;
-  let lastTouchDist = null;
-  let rafId = null; // Used for requestAnimationFrame
+  let imageCurrentZoom = 100;
+  let imagePanX = 0;
+  let imagePanY = 0;
+  let imageIsPanning = false;
+  let imageStartX = 0;
+  let imageStartY = 0;
+  let imageLastTouchDist = null;
+  let imageRafId = null; // Used for requestAnimationFrame
 
-  const scheduleUpdate = () => {
-    if (rafId) return;
-    rafId = requestAnimationFrame(() => {
-      updateTransform();
-      rafId = null;
+  const scheduleImageUpdate = () => {
+    if (imageRafId) return;
+    imageRafId = requestAnimationFrame(() => {
+      updateImageTransform();
+      imageRafId = null;
     });
   };
 
-  const clampPan = () => {
-    const scaledWidth = img.naturalWidth * (currentZoom / 100);
-    const scaledHeight = img.naturalHeight * (currentZoom / 100);
-    const canvasRect = canvas.getBoundingClientRect();
+  const clampImagePan = () => {
+    const scaledWidth = img.naturalWidth * (imageCurrentZoom / 100);
+    const scaledHeight = img.naturalHeight * (imageCurrentZoom / 100);
+    const canvasRect = imageCanvas.getBoundingClientRect();
 
-    // Reset pan if image is smaller than canvas in a dimension
     if (scaledWidth <= canvasRect.width) {
-      panX = 0;
+      imagePanX = 0;
     } else {
       const maxPanX = (scaledWidth - canvasRect.width) / 2;
-      panX = Math.min(maxPanX, Math.max(-maxPanX, panX));
+      imagePanX = Math.min(maxPanX, Math.max(-maxPanX, imagePanX));
     }
 
     if (scaledHeight <= canvasRect.height) {
-      panY = 0;
+      imagePanY = 0;
     } else {
       const maxPanY = (scaledHeight - canvasRect.height) / 2;
-      panY = Math.min(maxPanY, Math.max(-maxPanY, panY));
+      imagePanY = Math.min(maxPanY, Math.max(-maxPanY, imagePanY));
     }
   };
 
-  const updateTransform = () => {
-    clampPan();
-    img.style.transform = `translate(${panX}px, ${panY}px) scale(${currentZoom / 100})`;
-    const zoomLabel = document.getElementById("zoom-label");
-    if (zoomLabel) zoomLabel.textContent = `${currentZoom}%`;
+  const updateImageTransform = () => {
+    clampImagePan();
+    img.style.transform = `translate(${imagePanX}px, ${imagePanY}px) scale(${imageCurrentZoom / 100})`;
+    const zoomLabel = document.getElementById(`image-zoom-label-${uniqueImageId}`);
+    if (zoomLabel) zoomLabel.textContent = `${imageCurrentZoom}%`;
   };
 
-  const applyZoom = (delta) => {
-    const newZoom = Math.max(25, Math.min(400, currentZoom + delta));
-    if (newZoom !== currentZoom) {
-      currentZoom = newZoom;
-      scheduleUpdate();
+  const applyImageZoom = (delta) => {
+    const newZoom = Math.max(25, Math.min(400, imageCurrentZoom + delta));
+    if (newZoom !== imageCurrentZoom) {
+      imageCurrentZoom = newZoom;
+      scheduleImageUpdate();
     }
   };
 
-  const darFeedbackVisual = (btn) => {
+  // darFeedbackVisual permanece a mesma, pois é genérica
+  const darFeedbackVisualForImage = (btn) => {
     btn.classList.add("clicked");
     setTimeout(() => btn.classList.remove("clicked"), 250);
   };
 
-  const withFeedback = (btnId, callback) => {
+
+  const withFeedbackForImage = (btnId, callback) => {
     const btn = document.getElementById(btnId);
     if (btn) {
       btn.addEventListener("click", () => {
-        darFeedbackVisual(btn);
+        darFeedbackVisualForImage(btn);
         callback();
       });
     } else {
@@ -587,30 +592,29 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   };
 
-  // --- Botões da Barra de Ferramentas ---
-  withFeedback("btn-zoom-in", () => applyZoom(25));
-  withFeedback("btn-zoom-out", () => applyZoom(-25));
-  withFeedback("btn-reset", () => {
-    currentZoom = 100;
-    panX = 0;
-    panY = 0;
-    scheduleUpdate();
+  // --- Botões da Barra de Ferramentas (Imagem) ---
+  withFeedbackForImage(`btn-image-zoom-in-${uniqueImageId}`, () => applyImageZoom(25));
+  withFeedbackForImage(`btn-image-zoom-out-${uniqueImageId}`, () => applyImageZoom(-25));
+  withFeedbackForImage(`btn-image-reset-${uniqueImageId}`, () => {
+    imageCurrentZoom = 100;
+    imagePanX = 0;
+    imagePanY = 0;
+    scheduleImageUpdate();
   });
-  withFeedback("btn-center", () => {
-    panX = 0;
-    panY = 0;
-    scheduleUpdate();
+  withFeedbackForImage(`btn-image-center-${uniqueImageId}`, () => {
+    imagePanX = 0;
+    imagePanY = 0;
+    scheduleImageUpdate();
   });
-  withFeedback("btn-download", () => {
+  withFeedbackForImage(`btn-image-download-${uniqueImageId}`, () => {
     const a = document.createElement("a");
     a.href = img.src;
-    // Tenta obter a extensão do arquivo, caso contrário, usa 'png' como padrão
     const fileExtension = imagePath.split(".").pop() || "png";
     a.download = imageTitle.replace(/\s/g, "_") + "." + fileExtension;
     a.click();
   });
-  withFeedback("btn-fullscreen", () => {
-    const el = document.getElementById("image-container");
+  withFeedbackForImage(`btn-image-fullscreen-${uniqueImageId}`, () => {
+    const el = document.getElementById(`image-container-${uniqueImageId}`);
     if (el) {
       if (!document.fullscreenElement) {
         el.requestFullscreen().catch(err => {
@@ -622,96 +626,83 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   });
 
-  // --- Interação do Mouse (Pan e Coordenadas) ---
-  let isDragging = false; // Separate flag for mouse drag
+  // --- Interação do Mouse (Pan e Coordenadas para Imagem) ---
+  let imageIsDragging = false;
   img.addEventListener("mousedown", (e) => {
-    isDragging = true;
-    startX = e.clientX;
-    startY = e.clientY;
-    canvas.style.cursor = "grabbing";
+    imageIsDragging = true;
+    imageStartX = e.clientX;
+    imageStartY = e.clientY;
+    imageCanvas.style.cursor = "grabbing";
   });
 
   window.addEventListener("mouseup", () => {
-    isDragging = false;
-    canvas.style.cursor = "grab";
+    imageIsDragging = false;
+    imageCanvas.style.cursor = "grab";
   });
 
   window.addEventListener("mousemove", (e) => {
-    // Update coordinates display
-    const coordDisplay = document.getElementById("coord-display");
+    const coordDisplay = document.getElementById(`image-coord-display-${uniqueImageId}`);
     if (coordDisplay) {
       const rect = img.getBoundingClientRect();
-      // Calculate coordinates relative to the original image size
-      const x = (e.clientX - rect.left - panX) / (currentZoom / 100) * (img.naturalWidth / rect.width * (currentZoom / 100));
-      const y = (e.clientY - rect.top - panY) / (currentZoom / 100) * (img.naturalHeight / rect.height * (currentZoom / 100));
+      const x = (e.clientX - rect.left) / (imageCurrentZoom / 100) - ((imageCanvas.offsetWidth - img.naturalWidth * (imageCurrentZoom / 100)) / 2) / (imageCurrentZoom / 100) - imagePanX / (imageCurrentZoom / 100);
+      const y = (e.clientY - rect.top) / (imageCurrentZoom / 100) - ((imageCanvas.offsetHeight - img.naturalHeight * (imageCurrentZoom / 100)) / 2) / (imageCurrentZoom / 100) - imagePanY / (imageCurrentZoom / 100);
 
-      // Adjust calculation for actual image dimensions
-      const naturalX = (e.clientX - rect.left) / (currentZoom / 100) - (img.naturalWidth / 2 - img.width / 2);
-      const naturalY = (e.clientY - rect.top) / (currentZoom / 100) - (img.naturalHeight / 2 - img.height / 2);
-
-      const offsetX = (rect.width - img.naturalWidth * (currentZoom / 100)) / 2;
-      const offsetY = (rect.height - img.naturalHeight * (currentZoom / 100)) / 2;
-
-      const displayX = (e.clientX - rect.left - panX - offsetX) / (currentZoom / 100);
-      const displayY = (e.clientY - rect.top - panY - offsetY) / (currentZoom / 100);
-
-      coordDisplay.textContent = `X: ${displayX.toFixed(0)} Y: ${displayY.toFixed(0)}`;
+      coordDisplay.textContent = `X: ${x.toFixed(0)} Y: ${y.toFixed(0)}`;
     }
 
-    if (!isDragging) return;
-    panX += e.clientX - startX;
-    panY += e.clientY - startY;
-    startX = e.clientX;
-    startY = e.clientY;
-    scheduleUpdate();
+    if (!imageIsDragging) return;
+    imagePanX += e.clientX - imageStartX;
+    imagePanY += e.clientY - imageStartY;
+    imageStartX = e.clientX;
+    imageStartY = e.clientY;
+    scheduleImageUpdate();
   });
 
 
-  // --- Interação de Toque (Pan e Zoom) ---
+  // --- Interação de Toque (Pan e Zoom para Imagem) ---
   img.addEventListener("touchstart", (e) => {
     if (e.touches.length === 1) {
-      isPanning = true;
-      startX = e.touches[0].clientX;
-      startY = e.touches[0].clientY;
+      imageIsPanning = true;
+      imageStartX = e.touches[0].clientX;
+      imageStartY = e.touches[0].clientY;
     } else if (e.touches.length === 2) {
-      isPanning = false; // Disable single-touch pan if two touches are detected
-      lastTouchDist = Math.hypot(
+      imageIsPanning = false;
+      imageLastTouchDist = Math.hypot(
         e.touches[1].clientX - e.touches[0].clientX,
         e.touches[1].clientY - e.touches[0].clientY
       );
     }
-  }, { passive: false }); // Use passive: false to allow e.preventDefault() for scrolling
+  }, { passive: false });
 
   img.addEventListener("touchmove", (e) => {
-    e.preventDefault(); // Prevent default scrolling/zooming behavior
-    if (e.touches.length === 1 && isPanning) {
-      const dx = e.touches[0].clientX - startX;
-      const dy = e.touches[0].clientY - startY;
-      startX = e.touches[0].clientX;
-      startY = e.touches[0].clientY;
-      panX += dx;
-      panY += dy;
-      scheduleUpdate();
+    e.preventDefault();
+    if (e.touches.length === 1 && imageIsPanning) {
+      const dx = e.touches[0].clientX - imageStartX;
+      const dy = e.touches[0].clientY - imageStartY;
+      imageStartX = e.touches[0].clientX;
+      imageStartY = e.touches[0].clientY;
+      imagePanX += dx;
+      imagePanY += dy;
+      scheduleImageUpdate();
     } else if (e.touches.length === 2) {
       const [touch1, touch2] = e.touches;
       const currentDist = Math.hypot(
         touch2.clientX - touch1.clientX,
         touch2.clientY - touch1.clientY
       );
-      if (lastTouchDist !== null) {
-        // Adjust zoom sensitivity for touch
-        const delta = currentDist - lastTouchDist;
-        applyZoom(delta > 0 ? 10 : -10); // Smaller zoom step for smoother touch zoom
+      if (imageLastTouchDist !== null) {
+        const delta = currentDist - imageLastTouchDist;
+        applyImageZoom(delta > 0 ? 10 : -10);
       }
-      lastTouchDist = currentDist;
+      imageLastTouchDist = currentDist;
     }
   }, { passive: false });
 
   img.addEventListener("touchend", () => {
-    isPanning = false;
-    lastTouchDist = null;
+    imageIsPanning = false;
+    imageLastTouchDist = null;
   });
 
   // --- Inicialização ---
-  updateTransform(); // Apply initial transform
+  updateImageTransform();
 });
