@@ -60,4 +60,5 @@ nav:
 
 
 extra_javascript:
-  - js/perfect_svg_embed.js
+ 
+  - js/perfect_embed.js
