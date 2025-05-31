@@ -8,7 +8,7 @@ Este repositório traz um template de repo de documentação a ser seguido pelos
 
 ---
 
-## ⚡ Comando único para clonar e rodar o projeto do zero
+## Comando único para clonar e rodar o projeto do zero
 
 Se quiser rodar tudo de uma vez (clone, venv, dependências e servidor) em sistemas baseados em Unix (Linux/macOS ou WSL), use:
 
