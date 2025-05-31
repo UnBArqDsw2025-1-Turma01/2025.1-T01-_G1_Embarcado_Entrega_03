@@ -50,17 +50,21 @@ document.addEventListener("DOMContentLoaded", async () => {
       }
 
       .icon-btn:hover {
-        background-color: rgba(255, 255, 255, 0.08);
+        background-color: var(--md-accent-fg-color--transparent);
       }
 
       .icon-btn .material-icons {
-        font-size: 24px;
-        width: 24px;
-        height: 24px;
-        line-height: 24px;
+        font-size: 1.2rem;
+        width: 1.2rem;
+        height: 1.2rem;
+        line-height: 1;
         display: block;
-        color: inherit;
+        color: var(--md-primary-bg-color) !important;
         transition: transform 0.2s ease, color 0.2s ease;
+      }
+
+      .icon-btn:hover .material-icons {
+        color: var(--md-accent-fg-color) !important;
       }
 
       .icon-btn.clicked .material-icons {
@@ -72,9 +76,10 @@ document.addEventListener("DOMContentLoaded", async () => {
         background-color: var(--md-default-bg-color);
       }
 
-      #canvas-area {
+      /* AQUI: REMOVIDO 'touch-action: none;' */
+      /* #canvas-area {
         touch-action: none;
-      }
+      } */
 
       .toolbar-top,
       .toolbar-bottom {
@@ -103,9 +108,9 @@ document.addEventListener("DOMContentLoaded", async () => {
 
       #diagram-title {
         font-family: var(--md-text-font-family);
-        font-size: 0.875rem;
-        font-weight: 500;
-        line-height: 48px;
+        font-size: 0.9rem;
+        font-weight: bold;
+        line-height: 1;
         height: 100%;
         display: flex;
         align-items: center;
@@ -116,21 +121,57 @@ document.addEventListener("DOMContentLoaded", async () => {
 
       #zoom-label {
         font-family: var(--md-text-font-family);
-        font-size: 0.8rem;
+        font-size: 0.64rem;
         white-space: nowrap;
+        font-weight: bold;
+        color: inherit;
+        flex-shrink: 1;
       }
 
       #coord-display {
         font-family: var(--md-code-font-family);
-        font-size: 0.75rem;
+        font-size: 0.6rem;
         white-space: nowrap;
+        font-weight: bold;
+        color: inherit;
+        flex-shrink: 1;
       }
 
       .button-group, .coord-group {
         display: flex;
         align-items: center;
         gap: 8px;
-        flex-wrap: wrap;
+        flex-wrap: nowrap;
+        min-width: 0;
+      }
+
+      @media (max-width: 600px) {
+        .toolbar-bottom {
+          flex-wrap: wrap;
+          justify-content: center;
+          padding: 8px 8px;
+          gap: 4px;
+        }
+        .button-group, .coord-group {
+          flex-wrap: wrap;
+          gap: 4px;
+          flex-shrink: 1;
+        }
+        .icon-btn {
+          width: 32px;
+          height: 32px;
+        }
+        .icon-btn .material-icons {
+          font-size: 1rem;
+          width: 1rem;
+          height: 1rem;
+        }
+        #zoom-label, #coord-display {
+          font-size: 0.5rem;
+        }
+        #diagram-title {
+          font-size: 0.8rem;
+        }
       }
     </style>
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
@@ -169,7 +210,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   let isPanning = false;
   let startX = 0;
   let startY = 0;
-  let lastTouchDist = null;
+  let lastTouchDist = null; // Para zoom com 2 dedos
 
   const zoomFactor = (s) => Math.pow(1.05, s / 100);
   const getScrollFromDisplayedPercentage = (percentage) => Math.log(100 / percentage) / Math.log(1.05) * 100;
@@ -222,22 +263,28 @@ document.addEventListener("DOMContentLoaded", async () => {
     startX = e.clientX;
     startY = e.clientY;
     const rect = svg.getBoundingClientRect();
+    // A direção do pan para o usuário é o inverso do movimento do viewBox
     offsetX -= (dx / rect.width) * viewWidth;
     offsetY -= (dy / rect.height) * viewHeight;
     updateViewBox();
   });
 
-  // Touch zoom e pan
+  // AQUI: Ajustes na lógica de Touch para Pan (Zoom de 2 dedos ainda está customizado)
   canvas.addEventListener("touchstart", (e) => {
-    if (e.touches.length === 1) {
+    if (e.touches.length === 1) { // Pan com um dedo
       isPanning = true;
       startX = e.touches[0].clientX;
       startY = e.touches[0].clientY;
+    } else if (e.touches.length === 2) { // Inicia zoom com 2 dedos
+      lastTouchDist = Math.hypot(e.touches[1].clientX - e.touches[0].clientX, e.touches[1].clientY - e.touches[0].clientY);
+      isPanning = false; // Desativa pan ao iniciar zoom
     }
   });
 
   canvas.addEventListener("touchmove", (e) => {
-    if (e.touches.length === 1 && isPanning) {
+    e.preventDefault(); // Impede a rolagem padrão da página para controlar o movimento
+
+    if (e.touches.length === 1 && isPanning) { // Pan com um dedo
       const dx = e.touches[0].clientX - startX;
       const dy = e.touches[0].clientY - startY;
       startX = e.touches[0].clientX;
@@ -246,27 +293,25 @@ document.addEventListener("DOMContentLoaded", async () => {
       offsetX -= (dx / rect.width) * viewWidth;
       offsetY -= (dy / rect.height) * viewHeight;
       updateViewBox();
-      e.preventDefault();
-    }
-
-    if (e.touches.length === 2) {
+    } else if (e.touches.length === 2) { // Zoom com 2 dedos
       const touch1 = e.touches[0];
       const touch2 = e.touches[1];
-      const dist = Math.hypot(touch2.clientX - touch1.clientX, touch2.clientY - touch1.clientY);
+      const currentDist = Math.hypot(touch2.clientX - touch1.clientX, touch2.clientY - touch1.clientY);
 
       if (lastTouchDist !== null) {
-        const delta = dist - lastTouchDist;
-        simulateZoom(delta * 0.2);
+        const delta = currentDist - lastTouchDist;
+        simulateZoom(delta * 0.2); // Ajuste o 0.2 para a sensibilidade do zoom
       }
-
-      lastTouchDist = dist;
-      e.preventDefault();
+      lastTouchDist = currentDist;
+      isPanning = false; // Garante que o pan esteja desativado durante o zoom
     }
   });
 
   canvas.addEventListener("touchend", (e) => {
     isPanning = false;
-    if (e.touches.length < 2) lastTouchDist = null;
+    if (e.touches.length < 2) { // Se menos de 2 dedos, resetar lastTouchDist
+      lastTouchDist = null;
+    }
   });
 
   const darFeedbackVisual = (btn) => {
@@ -311,4 +356,4 @@ document.addEventListener("DOMContentLoaded", async () => {
     const y = offsetY + (e.clientY - rect.top) / rect.height * viewHeight;
     document.getElementById("coord-display").textContent = `X: ${x.toFixed(1)} Y: ${y.toFixed(1)}`;
   });
-});
+})
