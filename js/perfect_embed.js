@@ -1,4 +1,3 @@
-// --- SVG EMBED CODE ---
 async function initializeSvgEmbed() {
   const root = document.getElementById("svg-root");
   if (!root) return;
@@ -27,7 +26,7 @@ async function initializeSvgEmbed() {
     svg.setAttribute("id", "my-svg");
     svg.setAttribute("width", "100%");
     svg.setAttribute("height", "100%");
-    svg.setAttribute("preserveAspectRatio", "xMidYMid meet");
+    svg.setAttribute("preserveAspectRatio", "xMidYMid meet"); // Crucial para manter a proporção
 
     root.innerHTML = `
       <style>
@@ -199,6 +198,9 @@ async function initializeSvgEmbed() {
     const canvas = document.getElementById("canvas-area");
     canvas.appendChild(svg);
 
+    // Define a constante para o zoom padrão aqui
+    const DEFAULT_SVG_ZOOM = 100; // O zoom inicial e de reset
+
     let scroll = 0;
     let currentDisplayedPercentage = 100;
     let offsetX = 0;
@@ -210,6 +212,44 @@ async function initializeSvgEmbed() {
     let startY = 0;
     let lastTouchDist = null; // Para zoom com 2 dedos
 
+    // Get the *actual* bounding box of the SVG content
+    // This is more reliable than relying solely on the viewBox attribute,
+    // especially if the SVG content doesn't perfectly fill its declared viewBox.
+    const originalContentBBox = svg.getBBox();
+    const originalContentX = originalContentBBox.x;
+    const originalContentY = originalContentBBox.y;
+    const originalContentWidth = originalContentBBox.width;
+    const originalContentHeight = originalContentBBox.height;
+
+    // Use a robust default for the initial "100%" view if no viewBox is explicitly set.
+    // This is the reference for 100% zoom.
+    let initialViewBoxWidth = originalContentWidth;
+    let initialViewBoxHeight = originalContentHeight;
+    let initialViewBoxX = originalContentX;
+    let initialViewBoxY = originalContentY;
+
+    // If the SVG itself has a viewBox, it often defines the intended coordinate system.
+    // We should prefer this if it makes sense, but ensure it covers the content.
+    const svgViewBoxAttr = svg.getAttribute("viewBox");
+    if (svgViewBoxAttr) {
+        const parts = svgViewBoxAttr.split(" ").map(Number);
+        if (parts.length === 4 && !isNaN(parts[0])) {
+            initialViewBoxX = parts[0];
+            initialViewBoxY = parts[1];
+            initialViewBoxWidth = parts[2];
+            initialViewBoxHeight = parts[3];
+        }
+    } else {
+        // As a fallback, ensure the default view box covers the content and is slightly padded.
+        // This is a common practice to avoid clipping if the BBox is exactly at the edge.
+        const padding = 10; // Small padding around content
+        initialViewBoxX = originalContentX - padding;
+        initialViewBoxY = originalContentY - padding;
+        initialViewBoxWidth = originalContentWidth + 2 * padding;
+        initialViewBoxHeight = originalContentHeight + 2 * padding;
+    }
+
+
     const zoomFactor = (s) => Math.pow(1.05, s / 100);
     const getScrollFromDisplayedPercentage = (percentage) => Math.log(100 / percentage) / Math.log(1.05) * 100;
 
@@ -219,24 +259,56 @@ async function initializeSvgEmbed() {
     const simulateZoom = (percentageChange) => {
       let newPercentage = currentDisplayedPercentage + percentageChange;
       newPercentage = Math.max(25, Math.min(400, newPercentage));
+      
+      const oldScroll = scroll;
       const newScroll = getScrollFromDisplayedPercentage(newPercentage);
-      const scale = zoomFactor(newScroll) / zoomFactor(scroll);
-      const centerX = offsetX + viewWidth / 2;
-      const centerY = offsetY + viewHeight / 2;
+      const scale = zoomFactor(newScroll) / zoomFactor(oldScroll); // Scale relative to previous zoom level
+
+      // Get current center of the viewBox
+      const currentCenterX = offsetX + viewWidth / 2;
+      const currentCenterY = offsetY + viewHeight / 2;
+      
       viewWidth *= scale;
       viewHeight *= scale;
-      offsetX = centerX - viewWidth / 2;
-      offsetY = centerY - viewHeight / 2;
+      
+      // Keep the same center in the new, scaled viewBox
+      offsetX = currentCenterX - viewWidth / 2;
+      offsetY = currentCenterY - viewHeight / 2;
+      
       scroll = newScroll;
       currentDisplayedPercentage = newPercentage;
       updateViewBox();
       updateZoomLabel();
     };
 
+    // --- FUNCTION TO APPLY INITIAL ZOOM AND CENTER ---
+    const applyInitialZoom = (percentage) => {
+        currentDisplayedPercentage = percentage;
+        scroll = getScrollFromDisplayedPercentage(percentage);
+        const zoomScale = 100 / percentage; // e.g., for 25%, zoomScale = 4
+
+        // Calculate the target viewWidth and viewHeight based on the original content dimensions
+        // and the desired zoom scale.
+        viewWidth = initialViewBoxWidth * zoomScale;
+        viewHeight = initialViewBoxHeight * zoomScale;
+
+        // Calculate offsetX and offsetY to center the *original content* within the new viewBox.
+        // (Center of original content) - (Half of new viewBox dimension)
+        offsetX = (initialViewBoxX + initialViewBoxWidth / 2) - (viewWidth / 2);
+        offsetY = (initialViewBoxY + initialViewBoxHeight / 2) - (viewHeight / 2);
+
+        updateViewBox();
+        updateZoomLabel();
+    };
+
+    // Apply initial zoom usando a constante
+    applyInitialZoom(DEFAULT_SVG_ZOOM);
+
+
     // Mouse zoom e pan
     canvas.addEventListener("wheel", (e) => {
       e.preventDefault();
-      const delta = e.deltaY > 0 ? -5 : 5;
+      const delta = e.deltaY > 0 ? -5 : 5; // Smaller delta for smoother wheel zoom
       simulateZoom(delta);
     });
 
@@ -263,8 +335,13 @@ async function initializeSvgEmbed() {
       startY = e.clientY;
       const rect = svg.getBoundingClientRect();
       // A direção do pan para o usuário é o inverso do movimento do viewBox
-      offsetX -= (dx / rect.width) * viewWidth;
-      offsetY -= (dy / rect.height) * viewHeight;
+      // We need to scale the pan movement by the current zoom level of the content.
+      // The current scale of the content relative to its '100%' size is (initialViewBoxWidth / viewWidth).
+      // Or, inversely, the ratio of actual pixels moved on screen to viewBox units.
+      const scaleFactorForPan = viewWidth / rect.width; // How many viewBox units per screen pixel
+      
+      offsetX -= dx * scaleFactorForPan;
+      offsetY -= dy * scaleFactorForPan;
       updateViewBox();
     });
 
@@ -289,8 +366,9 @@ async function initializeSvgEmbed() {
         startX = e.touches[0].clientX;
         startY = e.touches[0].clientY;
         const rect = svg.getBoundingClientRect();
-        offsetX -= (dx / rect.width) * viewWidth;
-        offsetY -= (dy / rect.height) * viewHeight;
+        const scaleFactorForPan = viewWidth / rect.width;
+        offsetX -= dx * scaleFactorForPan;
+        offsetY -= dy * scaleFactorForPan;
         updateViewBox();
       } else if (e.touches.length === 2) { // Zoom com 2 dedos
         const touch1 = e.touches[0];
@@ -322,13 +400,13 @@ async function initializeSvgEmbed() {
     document.getElementById("btn-zoom-out").onclick = function () { darFeedbackVisual(this); simulateZoom(-25); };
     document.getElementById("btn-reset").onclick = function () {
       darFeedbackVisual(this);
-      scroll = 0; offsetX = 0; offsetY = 0; viewWidth = 1000; viewHeight = 1000; currentDisplayedPercentage = 100;
-      updateViewBox(); updateZoomLabel();
+      applyInitialZoom(DEFAULT_SVG_ZOOM); // Reset usando a constante
     };
     document.getElementById("btn-center").onclick = function () {
       darFeedbackVisual(this);
-      offsetX = (1000 - viewWidth) / 2;
-      offsetY = (1000 - viewHeight) / 2;
+      // Center the current content within the current view based on its original BBox.
+      offsetX = (initialViewBoxX + initialViewBoxWidth / 2) - (viewWidth / 2);
+      offsetY = (initialViewBoxY + initialViewBoxHeight / 2) - (viewHeight / 2);
       updateViewBox();
     };
     document.getElementById("btn-fullscreen").onclick = function () {
