@@ -300,7 +300,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
       if (lastTouchDist !== null) {
         const delta = currentDist - lastTouchDist;
-        simulateZoom(delta * 0.2); // Ajuste o 0.2 para a sensibilidade do zoom
+        simulateZoom(delta * 0.5); // Ajuste o 0.2 para a sensibilidade do zoom
       }
       lastTouchDist = currentDist;
       isPanning = false; // Garante que o pan esteja desativado durante o zoom
