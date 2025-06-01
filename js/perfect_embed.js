@@ -416,6 +416,20 @@ async function createSvgEmbed(rootElement) {
             if (!document.fullscreenElement) container.requestFullscreen();
             else document.exitFullscreen();
         };
+
+        document.getElementById(`btn-fullscreen-${uniqueSvgId}`).onclick = function () {
+        const container = document.getElementById(`svg-container-${uniqueSvgId}`);
+        if (!document.fullscreenElement) {
+            // Chame requestFullscreen() *diretamente aqui*
+            container.requestFullscreen().catch(err => {
+                console.error(`Erro ao tentar modo tela cheia para SVG: ${err.message} (${err.name})`);
+            });
+        } else {
+            document.exitFullscreen();
+        }
+        darFeedbackVisual(this);
+        };
+
         document.getElementById(`btn-download-${uniqueSvgId}`).onclick = function () {
             darFeedbackVisual(this);
             const data = new XMLSerializer().serializeToString(svg);
