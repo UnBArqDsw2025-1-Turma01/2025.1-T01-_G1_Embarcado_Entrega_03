@@ -736,7 +736,7 @@
 <p>Breve relato sobre as Iniciativas Extras realizadas pela equipe, no escopo da entrega.</p>
 <p>Apresentar links para comprobatórios que evidenciem qualquer que seja a realização extra conferida pela equipe no escopo da entrega.</p>
 <hr />
-<div class="svg-embed-container" data-svg-path="../../assets/test.svg" data-title="Diagrama de Exemplo" style="height: 70vh;"></div>
+<div class="svg-embed-container" data-svg-path="../../assets/diagramaV2.svg" data-title="" style="height: 70vh;"></div>
 <p>More actions</p>
 <div class="image-embed-container" data-image-path="../../assets/gato.png" data-title="Minha Imagem Incrível" style="height: 70vh;"></div>
 
@@ -764,9 +764,9 @@
 <h3 id="deteccao-de-queda-e-notificacao-padrao-observer">Detecção de Queda e Notificação (Padrão Observer)</h3>
 <ul>
 <li>Quando o <strong>ServicoMonitoramento</strong> processa um <strong>Monitoramento</strong> e o <strong>ResultadoAnalise</strong> indica uma situação crítica (ex: "QuedaDetectada"), ele atua como um "Subject" ou "Publisher" no padrão Observer.</li>
-<li>Ele <strong>notificaObservadores</strong> (implementações da interface <strong>ListenerQueda</strong>).</li>
-<li>O <strong>NotificadorCuidador</strong> (um observador) é acionado e, por sua vez, cria uma <strong>Notificacao</strong> baseada no <strong>ResultadoAnalise</strong> para o <strong>PessoaCuidador</strong> associado.</li>
-<li>O <strong>RegistradorLog</strong> (outro observador) também é acionado para registrar o evento de queda no sistema.</li>
+<li>Ele <strong>notificaObservadores</strong> (implementações da interface <strong>Notificador</strong>).</li>
+<li>A <strong>Notificação</strong> (um observador) é acionado e, por sua vez, criando uma notificação baseada no <strong>ResultadoAnalise</strong> para o <strong>PessoaCuidador</strong> associado.</li>
+<li>Comcomitante tem uma função responsável por registrar o log da notificação.</li>
 </ul>
 <h3 id="envio-de-notificacoes-padrao-strategy">Envio de Notificações (Padrão Strategy)</h3>
 <ul>
