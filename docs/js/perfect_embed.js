@@ -1,46 +1,376 @@
-// --- SVG EMBED HELPER FUNCTION ---
-// Esta função é responsável por inicializar um único embed de SVG.
-// Ela recebe o elemento raiz (div) onde o SVG será incorporado.
-async function createSvgEmbed(rootElement) {
-    // Verifica se o elemento raiz existe
-    if (!rootElement) return;
+// --- MÓDULO SVG ZOOM/PAN ---
+/**
+ * Classe responsável por gerenciar o zoom e pan de um elemento SVG.
+ */
+class SvgZoomPan {
+    /**
+     * Construtor da classe SvgZoomPan.
+     * @param {SVGElement} svgElement O elemento SVG principal.
+     * @param {HTMLElement} canvasElement O contêiner onde o SVG é exibido (para eventos de mouse/toque).
+     * @param {HTMLElement} zoomLabelElement O elemento <span> para exibir a porcentagem de zoom.
+     * @param {HTMLElement} coordDisplayElement O elemento <span> para exibir as coordenadas do mouse.
+     * @param {object} initialViewBox As dimensões iniciais do viewBox do SVG ({x, y, width, height}).
+     */
+    constructor(svgElement, canvasElement, zoomLabelElement, coordDisplayElement, initialViewBox) {
+        this.svg = svgElement;
+        this.canvas = canvasElement;
+        this.zoomLabel = zoomLabelElement;
+        this.coordDisplay = coordDisplayElement;
 
-    // Obtém o caminho do SVG e o título do diagrama dos atributos data do elemento raiz
-    const svgPath = rootElement.dataset.svgPath; // Agora usa data-svg-path
-    const diagramTitle = rootElement.dataset.title || "Diagrama";
-    // Gera um ID único para este embed SVG para evitar conflitos se houver múltiplos na página
-    const uniqueSvgId = `my-svg-${Math.random().toString(36).substr(2, 9)}`;
+        // Propriedades iniciais do viewBox, usadas para resetar e centralizar
+        this.initialViewBoxX = initialViewBox.x;
+        this.initialViewBoxY = initialViewBox.y;
+        this.initialViewBoxWidth = initialViewBox.width;
+        this.initialViewBoxHeight = initialViewBox.height;
 
-    // Se o caminho do SVG não estiver definido, exibe uma mensagem de erro
-    if (!svgPath) {
-        rootElement.innerHTML = "<p style='color: red;'>Atributo data-svg-path não definido.</p>";
-        return;
+        // Estado atual do zoom e pan
+        this.currentDisplayedPercentage = 100; // Porcentagem de zoom exibida
+        this.offsetX = 0; // Posição X do viewBox
+        this.offsetY = 0; // Posição Y do viewBox
+        this.viewWidth = 0; // Largura atual do viewBox
+        this.viewHeight = 0; // Altura atual do viewBox
+        this.scroll = 0; // Variável auxiliar para cálculo de zoom logarítmico
+
+        // Estado do arrasto (pan)
+        this.isPanning = false;
+        this.startX = 0; // Posição inicial do mouse/toque para pan
+        this.startY = 0;
+        this.lastTouchDist = null; // Distância entre dois dedos para zoom por toque
+
+        this.DEFAULT_SVG_ZOOM = 100; // Nível de zoom inicial padrão
+
+        this.init(); // Inicializa o estado
+        this.attachEventListeners(); // Anexa os listeners de eventos
     }
 
-    try {
-        // Tenta buscar o conteúdo do arquivo SVG
-        const res = await fetch(svgPath);
-        if (!res.ok) throw new Error(`Erro ao carregar SVG: ${res.statusText}`);
-        const text = await res.text();
-        // Analisa o texto SVG para criar um objeto SVG DOM
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(text, "image/svg+xml");
-        const svg = doc.querySelector("svg");
+    /**
+     * Inicializa o zoom e pan do SVG para o estado padrão.
+     */
+    init() {
+        this.applyZoom(this.DEFAULT_SVG_ZOOM, true); // Aplica o zoom inicial
+    }
 
-        // Se nenhum SVG válido for encontrado no arquivo, exibe um erro
-        if (!svg) {
-            rootElement.innerHTML = "<p style='color:red'>SVG inválido.</p>";
-            return;
+    /**
+     * Calcula o fator de zoom com base em um valor de "scroll" logarítmico.
+     * @param {number} s O valor de scroll.
+     * @returns {number} O fator de zoom.
+     */
+    zoomFactor(s) {
+        return Math.pow(1.05, s / 100);
+    }
+
+    /**
+     * Converte uma porcentagem de zoom em um valor de "scroll" logarítmico.
+     * @param {number} percentage A porcentagem de zoom.
+     * @returns {number} O valor de scroll correspondente.
+     */
+    getScrollFromDisplayedPercentage(percentage) {
+        return Math.log(100 / percentage) / Math.log(1.05) * 100;
+    }
+
+    /**
+     * Atualiza o atributo `viewBox` do SVG com os valores atuais de `offsetX`, `offsetY`, `viewWidth` e `viewHeight`.
+     */
+    updateViewBox() {
+        this.svg.setAttribute("viewBox", `${this.offsetX} ${this.offsetY} ${this.viewWidth} ${this.viewHeight}`);
+    }
+
+    /**
+     * Atualiza o texto do elemento que exibe a porcentagem de zoom.
+     */
+    updateZoomLabel() {
+        if (this.zoomLabel) {
+            this.zoomLabel.textContent = Math.round(this.currentDisplayedPercentage) + "%";
+        }
+    }
+
+    /**
+     * Simula um zoom aplicando uma mudança percentual ao zoom atual.
+     * O zoom é limitado entre 25% e 400%.
+     * @param {number} percentageChange A quantidade de mudança na porcentagem de zoom.
+     */
+    simulateZoom(percentageChange) {
+        let newPercentage = this.currentDisplayedPercentage + percentageChange;
+        newPercentage = Math.max(25, Math.min(400, newPercentage)); // Limita o zoom
+
+        if (newPercentage === this.currentDisplayedPercentage) return; // Não faz nada se o zoom não mudar
+
+        const oldScroll = this.scroll;
+        const newScroll = this.getScrollFromDisplayedPercentage(newPercentage);
+        const scale = this.zoomFactor(newScroll) / this.zoomFactor(oldScroll);
+
+        // Calcula o centro atual do viewBox para manter o zoom centrado
+        const currentCenterX = this.offsetX + this.viewWidth / 2;
+        const currentCenterY = this.offsetY + this.viewHeight / 2;
+
+        // Aplica a escala à largura e altura do viewBox
+        this.viewWidth *= scale;
+        this.viewHeight *= scale;
+
+        // Ajusta o offsetX e offsetY para manter o centro
+        this.offsetX = currentCenterX - this.viewWidth / 2;
+        this.offsetY = currentCenterY - this.viewHeight / 2;
+
+        this.scroll = newScroll;
+        this.currentDisplayedPercentage = newPercentage;
+        this.updateViewBox();
+        this.updateZoomLabel();
+    }
+
+    /**
+     * Aplica um zoom específico ao SVG. Usado para inicialização e reset.
+     * @param {number} percentage A porcentagem de zoom a ser aplicada.
+     * @param {boolean} resetPan Se true, redefine o pan para o centro também.
+     */
+    applyZoom(percentage, resetPan = false) {
+        this.currentDisplayedPercentage = percentage;
+        this.scroll = this.getScrollFromDisplayedPercentage(percentage);
+        const zoomScale = 100 / percentage;
+
+        this.viewWidth = this.initialViewBoxWidth * zoomScale;
+        this.viewHeight = this.initialViewBoxHeight * zoomScale;
+
+        if (resetPan) {
+            // Centraliza o viewBox no conteúdo original
+            this.offsetX = (this.initialViewBoxX + this.initialViewBoxWidth / 2) - (this.viewWidth / 2);
+            this.offsetY = (this.initialViewBoxY + this.initialViewBoxHeight / 2) - (this.viewHeight / 2);
+        } else {
+            // Mantém o centro atual ao aplicar um novo zoom
+            const currentCenterX = this.offsetX + this.viewWidth / 2;
+            const currentCenterY = this.offsetY + this.viewHeight / 2;
+            this.offsetX = currentCenterX - this.viewWidth / 2;
+            this.offsetY = currentCenterY - this.viewHeight / 2;
         }
 
-        // Configura atributos essenciais para o SVG
-        svg.setAttribute("id", uniqueSvgId); // Define o ID único para o SVG
-        svg.setAttribute("width", "100%");
-        svg.setAttribute("height", "100%");
-        svg.setAttribute("preserveAspectRatio", "xMidYMid meet"); // Crucial para manter a proporção
+        this.updateViewBox();
+        this.updateZoomLabel();
+    }
 
-        // Injeta a estrutura HTML e CSS dentro do elemento raiz
-        rootElement.innerHTML = `
+    /**
+     * Redefine o zoom e o pan para o estado inicial padrão.
+     */
+    reset() {
+        this.applyZoom(this.DEFAULT_SVG_ZOOM, true);
+    }
+
+    /**
+     * Centraliza o diagrama na visualização atual sem alterar o zoom.
+     */
+    center() {
+        this.offsetX = (this.initialViewBoxX + this.initialViewBoxWidth / 2) - (this.viewWidth / 2);
+        this.offsetY = (this.initialViewBoxY + this.initialViewBoxHeight / 2) - (this.viewHeight / 2);
+        this.updateViewBox();
+    }
+
+    /**
+     * Atualiza a exibição das coordenadas do mouse dentro do SVG.
+     * @param {number} clientX Posição X do mouse na tela.
+     * @param {number} clientY Posição Y do mouse na tela.
+     */
+    updateCoordinates(clientX, clientY) {
+        const rect = this.svg.getBoundingClientRect();
+        // Converte as coordenadas do cliente para as coordenadas do viewBox do SVG
+        const x = this.offsetX + (clientX - rect.left) / rect.width * this.viewWidth;
+        const y = this.offsetY + (clientY - rect.top) / rect.height * this.viewHeight;
+        if (this.coordDisplay) {
+            this.coordDisplay.textContent = `X: ${x.toFixed(1)} Y: ${y.toFixed(1)}`;
+        }
+    }
+
+    /**
+     * Anexa os listeners de eventos (roda do mouse, arrasto, toque) ao elemento canvas.
+     */
+    attachEventListeners() {
+        // Evento de roda do mouse para zoom
+        this.canvas.addEventListener("wheel", (e) => {
+            e.preventDefault(); // Impede o scroll da página
+            const delta = e.deltaY > 0 ? -5 : 5; // Determina a direção do zoom
+            this.simulateZoom(delta);
+        });
+
+        // Eventos de mouse para pan (arrasto)
+        this.canvas.addEventListener("mousedown", (e) => {
+            this.isPanning = true;
+            this.startX = e.clientX;
+            this.startY = e.clientY;
+            this.canvas.style.cursor = "grabbing"; // Muda o cursor para indicar arrasto
+        });
+
+        window.addEventListener("mouseup", () => {
+            this.isPanning = false;
+            this.canvas.style.cursor = "grab"; // Volta o cursor ao normal
+        });
+
+        window.addEventListener("mouseleave", () => this.isPanning = false); // Para de arrastar se o mouse sair da janela
+
+        this.canvas.addEventListener("mousemove", (e) => {
+            this.updateCoordinates(e.clientX, e.clientY); // Sempre atualiza as coordenadas
+
+            if (!this.isPanning) return;
+            const dx = e.clientX - this.startX; // Mudança na posição X do mouse
+            const dy = e.clientY - this.startY; // Mudança na posição Y do mouse
+            this.startX = e.clientX;
+            this.startY = e.clientY;
+
+            const rect = this.svg.getBoundingClientRect();
+            // Calcula o fator de escala para converter pixels da tela em unidades do viewBox
+            const scaleFactorForPan = this.viewWidth / rect.width;
+
+            // Ajusta o offsetX e offsetY do viewBox
+            this.offsetX -= dx * scaleFactorForPan;
+            this.offsetY -= dy * scaleFactorForPan;
+            this.updateViewBox(); // Atualiza o SVG
+        });
+
+        // Eventos de toque para pan e zoom (multi-toque)
+        this.canvas.addEventListener("touchstart", (e) => {
+            if (e.touches.length === 1) {
+                this.isPanning = true;
+                this.startX = e.touches[0].clientX;
+                this.startY = e.touches[0].clientY;
+            } else if (e.touches.length === 2) {
+                // Calcula a distância inicial entre os dois dedos
+                this.lastTouchDist = Math.hypot(e.touches[1].clientX - e.touches[0].clientX, e.touches[1].clientY - e.touches[0].clientY);
+                this.isPanning = false; // Desativa o pan durante o zoom multi-toque
+            }
+        }, { passive: false }); // `passive: false` é importante para `preventDefault`
+
+        this.canvas.addEventListener("touchmove", (e) => {
+            e.preventDefault(); // Impede o scroll da página em dispositivos móveis
+            if (e.touches.length === 1 && this.isPanning) {
+                const dx = e.touches[0].clientX - this.startX;
+                const dy = e.touches[0].clientY - this.startY;
+                this.startX = e.touches[0].clientX;
+                this.startY = e.touches[0].clientY;
+                const rect = this.svg.getBoundingClientRect();
+                const scaleFactorForPan = this.viewWidth / rect.width;
+                this.offsetX -= dx * scaleFactorForPan;
+                this.offsetY -= dy * scaleFactorForPan;
+                this.updateViewBox();
+            } else if (e.touches.length === 2) {
+                const touch1 = e.touches[0];
+                const touch2 = e.touches[1];
+                const currentDist = Math.hypot(touch2.clientX - touch1.clientX, touch2.clientY - touch1.clientY);
+
+                if (this.lastTouchDist !== null) {
+                    const delta = currentDist - this.lastTouchDist;
+                    this.simulateZoom(delta * 0.7); // Ajusta a sensibilidade do zoom por toque
+                }
+                this.lastTouchDist = currentDist;
+                this.isPanning = false;
+            }
+        }, { passive: false });
+
+        this.canvas.addEventListener("touchend", (e) => {
+            this.isPanning = false;
+            if (e.touches.length < 2) {
+                this.lastTouchDist = null; // Reseta a distância se menos de 2 dedos
+            }
+        });
+    }
+}
+
+// --- MÓDULO DE FEEDBACK DE BOTÃO ---
+class ButtonFeedback {
+    /**
+     * Aplica um feedback visual temporário a um botão.
+     * @param {HTMLElement} btn O elemento do botão.
+     */
+    static apply(btn) {
+        btn.classList.add("clicked");
+        setTimeout(() => btn.classList.remove("clicked"), 250);
+    }
+}
+
+// --- MÓDULO DE TELA CHEIA ---
+class FullscreenHandler {
+    /**
+     * Anexa a lógica de tela cheia a um botão.
+     * @param {string} buttonId O ID do botão de tela cheia.
+     * @param {string} containerId O ID do contêiner que deve ir para tela cheia.
+     */
+    static attach(buttonId, containerId) {
+        const btn = document.getElementById(buttonId);
+        const container = document.getElementById(containerId);
+        if (btn && container) {
+            btn.onclick = function () {
+                ButtonFeedback.apply(this);
+                if (!document.fullscreenElement) {
+                    container.requestFullscreen().catch(err => {
+                        console.error(`Erro ao tentar modo tela cheia: ${err.message} (${err.name})`);
+                    });
+                } else {
+                    document.exitFullscreen();
+                }
+            };
+        } else {
+            console.warn(`Botão de tela cheia '${buttonId}' ou contêiner '${containerId}' não encontrado.`);
+        }
+    }
+}
+
+// --- MÓDULO DE DOWNLOAD ---
+class DownloadHandler {
+    /**
+     * Anexa a lógica de download para SVG a um botão.
+     * @param {string} buttonId O ID do botão de download.
+     * @param {SVGElement} svgElement O elemento SVG a ser baixado.
+     * @param {string} fileName O nome base do arquivo para download.
+     */
+    static attachSvg(buttonId, svgElement, fileName) {
+        const btn = document.getElementById(buttonId);
+        if (btn) {
+            btn.onclick = function () {
+                ButtonFeedback.apply(this);
+                const data = new XMLSerializer().serializeToString(svgElement);
+                const blob = new Blob([data], { type: "image/svg+xml" });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = fileName.replace(/\s/g, "_") + ".svg";
+                a.click();
+                URL.revokeObjectURL(url);
+            };
+        } else {
+            console.warn(`Botão de download SVG '${buttonId}' não encontrado.`);
+        }
+    }
+
+    /**
+     * Anexa a lógica de download para imagem a um botão.
+     * @param {string} buttonId O ID do botão de download.
+     * @param {HTMLImageElement} imgElement O elemento de imagem a ser baixado.
+     * @param {string} fileName O nome base do arquivo para download.
+     * @param {string} imagePath O caminho original da imagem para inferir a extensão.
+     */
+    static attachImage(buttonId, imgElement, fileName, imagePath) {
+        const btn = document.getElementById(buttonId);
+        if (btn) {
+            btn.onclick = function () {
+                ButtonFeedback.apply(this);
+                const a = document.createElement("a");
+                a.href = imgElement.src;
+                const fileExtension = imagePath.split(".").pop() || "png";
+                a.download = fileName.replace(/\s/g, "_") + "." + fileExtension;
+                a.click();
+            };
+        } else {
+            console.warn(`Botão de download de imagem '${buttonId}' não encontrado.`);
+        }
+    }
+}
+
+// --- MÓDULO DE CONSTRUÇÃO DA UI DO EMBED ---
+class EmbedUIBuilder {
+    /**
+     * Gera o HTML comum para o contêiner do embed, incluindo estilos e barras de ferramentas.
+     * @param {string} uniqueId Um ID único para o embed.
+     * @param {string} title O título a ser exibido na barra superior.
+     * @param {string} typePrefix Um prefixo para IDs de elementos específicos (ex: 'svg' ou 'image').
+     * @returns {string} O HTML completo da estrutura do embed.
+     */
+    static getCommonHtml(uniqueId, title, typePrefix) {
+        return `
             <style>
                 /* Keyframes para o feedback visual dos botões */
                 @keyframes feedback-glow {
@@ -87,13 +417,13 @@ async function createSvgEmbed(rootElement) {
                     animation: feedback-glow 0.25s ease;
                 }
 
-                /* Estilos específicos para o contêiner do SVG, usando o ID único */
-                #svg-container-${uniqueSvgId} {
+                /* Estilos específicos para o contêiner do embed */
+                #${typePrefix}-container-${uniqueId} {
                     border: 1px solid var(--md-default-fg-color--lighter);
                     background-color: var(--md-default-bg-color);
                 }
 
-                /* Estilos para as barras de ferramentas (comuns para SVG e Imagem) */
+                /* Estilos para as barras de ferramentas */
                 .toolbar-top,
                 .toolbar-bottom {
                     min-height: 48px;
@@ -119,8 +449,8 @@ async function createSvgEmbed(rootElement) {
                     gap: 8px;
                 }
 
-                /* Estilos para o título do diagrama (usando o ID único) */
-                #diagram-title-${uniqueSvgId} {
+                /* Estilos para o título do diagrama/imagem */
+                #${typePrefix}-title-${uniqueId} {
                     font-family: var(--md-text-font-family);
                     font-size: 0.9rem;
                     font-weight: bold;
@@ -133,8 +463,8 @@ async function createSvgEmbed(rootElement) {
                     color: inherit;
                 }
 
-                /* Estilos para o label de zoom (usando o ID único) */
-                #zoom-label-${uniqueSvgId} {
+                /* Estilos para o label de zoom */
+                #${typePrefix}-zoom-label-${uniqueId} {
                     font-family: var(--md-text-font-family);
                     font-size: 0.64rem;
                     white-space: nowrap;
@@ -143,8 +473,8 @@ async function createSvgEmbed(rootElement) {
                     flex-shrink: 1;
                 }
 
-                /* Estilos para o display de coordenadas (usando o ID único) */
-                #coord-display-${uniqueSvgId} {
+                /* Estilos para o display de coordenadas */
+                #${typePrefix}-coord-display-${uniqueId} {
                     font-family: var(--md-code-font-family);
                     font-size: 0.6rem;
                     white-space: nowrap;
@@ -184,636 +514,370 @@ async function createSvgEmbed(rootElement) {
                         width: 1rem;
                         height: 1rem;
                     }
-                    #zoom-label-${uniqueSvgId}, #coord-display-${uniqueSvgId} {
+                    #${typePrefix}-zoom-label-${uniqueId}, #${typePrefix}-coord-display-${uniqueId} {
                         font-size: 0.5rem;
                     }
-                    #diagram-title-${uniqueSvgId} {
+                    #${typePrefix}-title-${uniqueId} {
                         font-size: 0.8rem;
                     }
                 }
             </style>
             <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 
-            <div id="svg-container-${uniqueSvgId}" style="width:100%; height:100%; display:flex; flex-direction:column; cursor:grab;">
+            <div id="${typePrefix}-container-${uniqueId}" style="width:100%; height:100%; display:flex; flex-direction:column; cursor:grab;">
                 <div class="toolbar-top">
-                    <span id="diagram-title-${uniqueSvgId}">${diagramTitle}</span>
+                    <span id="${typePrefix}-title-${uniqueId}">${title}</span>
                 </div>
-                <div id="canvas-area-${uniqueSvgId}" style="flex:1; overflow:hidden; display:flex; justify-content:center; align-items:center;"></div>
+                <div id="canvas-area-${uniqueId}" style="flex:1; overflow:hidden; display:flex; justify-content:center; align-items:center;"></div>
                 <div class="toolbar-bottom">
                     <div class="button-group">
-                        <button class="icon-btn" id="btn-zoom-out-${uniqueSvgId}" title="Reduzir Zoom"><span class="material-icons">remove</span></button>
-                        <span id="zoom-label-${uniqueSvgId}">100%</span>
-                        <button class="icon-btn" id="btn-zoom-in-${uniqueSvgId}" title="Aumentar Zoom"><span class="material-icons">add</span></button>
-                        <button class="icon-btn" id="btn-reset-${uniqueSvgId}" title="Resetar Zoom"><span class="material-icons">refresh</span></button>
-                        <button class="icon-btn" id="btn-center-${uniqueSvgId}" title="Centralizar Diagrama"><span class="material-icons">center_focus_strong</span></button>
+                        <button class="icon-btn" id="btn-${typePrefix}-zoom-out-${uniqueId}" title="Reduzir Zoom"><span class="material-icons">remove</span></button>
+                        <span id="${typePrefix}-zoom-label-${uniqueId}">100%</span>
+                        <button class="icon-btn" id="btn-${typePrefix}-zoom-in-${uniqueId}" title="Aumentar Zoom"><span class="material-icons">add</span></button>
+                        <button class="icon-btn" id="btn-${typePrefix}-reset-${uniqueId}" title="Resetar Zoom"><span class="material-icons">refresh</span></button>
+                        <button class="icon-btn" id="btn-${typePrefix}-center-${uniqueId}" title="Centralizar Diagrama"><span class="material-icons">center_focus_strong</span></button>
                     </div>
                     <div class="coord-group">
-                        <span id="coord-display-${uniqueSvgId}"></span>
-                        <button class="icon-btn" id="btn-download-${uniqueSvgId}" title="Baixar SVG"><span class="material-icons">download</span></button>
-                        <button class="icon-btn" id="btn-fullscreen-${uniqueSvgId}" title="Tela cheia"><span class="material-icons">fullscreen</span></button>
+                        <span id="${typePrefix}-coord-display-${uniqueId}"></span>
+                        <button class="icon-btn" id="btn-${typePrefix}-download-${uniqueId}" title="Baixar"><span class="material-icons">download</span></button>
+                        <button class="icon-btn" id="btn-${typePrefix}-fullscreen-${uniqueId}" title="Tela cheia"><span class="material-icons">fullscreen</span></button>
                     </div>
                 </div>
             </div>
         `;
+    }
+}
 
-        // Adiciona o elemento SVG ao canvas
-        const canvas = document.getElementById(`canvas-area-${uniqueSvgId}`);
-        canvas.appendChild(svg);
+// --- CLASSE PARA EMBED DE SVG ---
+class SvgEmbed {
+    /**
+     * Inicializa um embed SVG.
+     * @param {HTMLElement} rootElement O elemento raiz (div) onde o SVG será incorporado.
+     */
+    async create(rootElement) {
+        if (!rootElement) return;
 
-        // Define o zoom padrão para este SVG (usado na inicialização e no reset)
-        const DEFAULT_SVG_ZOOM = 75;
+        const svgPath = rootElement.dataset.svgPath;
+        const diagramTitle = rootElement.dataset.title || "Diagrama";
+        const uniqueSvgId = `my-svg-${Math.random().toString(36).substr(2, 9)}`;
 
-        // Variáveis de estado para o controle do SVG
-        let scroll = 0;
-        let currentDisplayedPercentage = 100;
-        let offsetX = 0;
-        let offsetY = 0;
-        let viewWidth = 1000;
-        let viewHeight = 1000;
-        let isPanning = false;
-        let startX = 0;
-        let startY = 0;
-        let lastTouchDist = null; // Para zoom com 2 dedos
-
-        // Obtém a caixa delimitadora real do conteúdo do SVG
-        const originalContentBBox = svg.getBBox();
-        const originalContentX = originalContentBBox.x;
-        const originalContentY = originalContentBBox.y;
-        const originalContentWidth = originalContentBBox.width;
-        const originalContentHeight = originalContentBBox.height;
-
-        // Define o viewBox inicial com base no conteúdo ou no atributo viewBox do SVG
-        let initialViewBoxWidth = originalContentWidth;
-        let initialViewBoxHeight = originalContentHeight;
-        let initialViewBoxX = originalContentX;
-        let initialViewBoxY = originalContentY;
-
-        const svgViewBoxAttr = svg.getAttribute("viewBox");
-        if (svgViewBoxAttr) {
-            const parts = svgViewBoxAttr.split(" ").map(Number);
-            if (parts.length === 4 && !isNaN(parts[0])) {
-                initialViewBoxX = parts[0];
-                initialViewBoxY = parts[1];
-                initialViewBoxWidth = parts[2];
-                initialViewBoxHeight = parts[3];
-            }
-        } else {
-            const padding = 10;
-            initialViewBoxX = originalContentX - padding;
-            initialViewBoxY = originalContentY - padding;
-            initialViewBoxWidth = originalContentWidth + 2 * padding;
-            initialViewBoxHeight = originalContentHeight + 2 * padding;
+        if (!svgPath) {
+            rootElement.innerHTML = "<p style='color: red;'>Atributo data-svg-path não definido.</p>";
+            return;
         }
 
-        // Funções auxiliares para zoom e atualização da interface
-        const zoomFactor = (s) => Math.pow(1.05, s / 100);
-        const getScrollFromDisplayedPercentage = (percentage) => Math.log(100 / percentage) / Math.log(1.05) * 100;
+        try {
+            const res = await fetch(svgPath);
+            if (!res.ok) throw new Error(`Erro ao carregar SVG: ${res.statusText}`);
+            const text = await res.text();
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(text, "image/svg+xml");
+            const svg = doc.querySelector("svg");
 
-        const updateViewBox = () => svg.setAttribute("viewBox", `${offsetX} ${offsetY} ${viewWidth} ${viewHeight}`);
-        const updateZoomLabel = () => document.getElementById(`zoom-label-${uniqueSvgId}`).textContent = Math.round(currentDisplayedPercentage) + "%";
+            if (!svg) {
+                rootElement.innerHTML = "<p style='color:red'>SVG inválido.</p>";
+                return;
+            }
 
-        const simulateZoom = (percentageChange) => {
-            let newPercentage = currentDisplayedPercentage + percentageChange;
-            newPercentage = Math.max(25, Math.min(400, newPercentage));
-            
-            const oldScroll = scroll;
-            const newScroll = getScrollFromDisplayedPercentage(newPercentage);
-            const scale = zoomFactor(newScroll) / zoomFactor(oldScroll);
-            const currentCenterX = offsetX + viewWidth / 2;
-            const currentCenterY = offsetY + viewHeight / 2;
-            
-            viewWidth *= scale;
-            viewHeight *= scale;
-            
-            offsetX = currentCenterX - viewWidth / 2;
-            offsetY = currentCenterY - viewHeight / 2;
-            
-            scroll = newScroll;
-            currentDisplayedPercentage = newPercentage;
-            updateViewBox();
-            updateZoomLabel();
+            svg.setAttribute("id", uniqueSvgId);
+            svg.setAttribute("width", "100%");
+            svg.setAttribute("height", "100%");
+            svg.setAttribute("preserveAspectRatio", "xMidYMid meet");
+
+            rootElement.innerHTML = EmbedUIBuilder.getCommonHtml(uniqueSvgId, diagramTitle, 'svg');
+
+            const canvas = document.getElementById(`canvas-area-${uniqueSvgId}`);
+            canvas.appendChild(svg);
+
+            const originalContentBBox = svg.getBBox();
+            let initialViewBoxX = originalContentBBox.x;
+            let initialViewBoxY = originalContentBBox.y;
+            let initialViewBoxWidth = originalContentBBox.width;
+            let initialViewBoxHeight = originalContentBBox.height;
+
+            const svgViewBoxAttr = svg.getAttribute("viewBox");
+            if (svgViewBoxAttr) {
+                const parts = svgViewBoxAttr.split(" ").map(Number);
+                if (parts.length === 4 && !isNaN(parts[0])) {
+                    initialViewBoxX = parts[0];
+                    initialViewBoxY = parts[1];
+                    initialViewBoxWidth = parts[2];
+                    initialViewBoxHeight = parts[3];
+                }
+            } else {
+                const padding = 10;
+                initialViewBoxX = originalContentBBox.x - padding;
+                initialViewBoxY = originalContentBBox.y - padding;
+                initialViewBoxWidth = originalContentBBox.width + 2 * padding;
+                initialViewBoxHeight = originalContentBBox.height + 2 * padding;
+            }
+
+            const svgZoomPanInstance = new SvgZoomPan(
+                svg,
+                canvas,
+                document.getElementById(`svg-zoom-label-${uniqueSvgId}`),
+                document.getElementById(`svg-coord-display-${uniqueSvgId}`),
+                {
+                    x: initialViewBoxX,
+                    y: initialViewBoxY,
+                    width: initialViewBoxWidth,
+                    height: initialViewBoxHeight
+                }
+            );
+
+            document.getElementById(`btn-svg-zoom-in-${uniqueSvgId}`).onclick = function () { ButtonFeedback.apply(this); svgZoomPanInstance.simulateZoom(25); };
+            document.getElementById(`btn-svg-zoom-out-${uniqueSvgId}`).onclick = function () { ButtonFeedback.apply(this); svgZoomPanInstance.simulateZoom(-25); };
+            document.getElementById(`btn-svg-reset-${uniqueSvgId}`).onclick = function () {
+                ButtonFeedback.apply(this);
+                svgZoomPanInstance.reset();
+            };
+            document.getElementById(`btn-svg-center-${uniqueSvgId}`).onclick = function () {
+                ButtonFeedback.apply(this);
+                svgZoomPanInstance.center();
+            };
+
+            FullscreenHandler.attach(`btn-svg-fullscreen-${uniqueSvgId}`, `svg-container-${uniqueSvgId}`);
+            DownloadHandler.attachSvg(`btn-svg-download-${uniqueSvgId}`, svg, diagramTitle);
+
+        } catch (error) {
+            console.error("Erro ao inicializar SVG embed:", error);
+            rootElement.innerHTML = `<p style='color: red;'>Erro ao carregar ou processar SVG: ${error.message}</p>`;
+        }
+    }
+}
+
+// --- CLASSE PARA EMBED DE IMAGEM ---
+class ImageEmbed {
+    /**
+     * Inicializa um embed de Imagem.
+     * @param {HTMLElement} rootElement O elemento raiz (div) onde a imagem será incorporada.
+     */
+    async create(rootElement) {
+        if (!rootElement) return;
+
+        const imagePath = rootElement.dataset.imagePath;
+        const imageTitle = rootElement.dataset.title || "Imagem";
+        const uniqueImageId = `my-image-${Math.random().toString(36).substr(2, 9)}`;
+
+        if (!imagePath) {
+            rootElement.innerHTML = "<p style='color: red;'>Atributo data-image-path não definido no elemento image-root.</p>";
+            return;
+        }
+
+        rootElement.innerHTML = EmbedUIBuilder.getCommonHtml(uniqueImageId, imageTitle, 'image');
+
+        const img = new Image();
+        img.src = imagePath;
+        img.id = `img-${uniqueImageId}`;
+        img.style.objectFit = "contain";
+        img.style.transformOrigin = "center";
+        img.style.willChange = "transform";
+        img.style.transition = "transform 0.05s ease-out";
+
+        const imageCanvas = document.getElementById(`canvas-area-${uniqueImageId}`);
+        if (!imageCanvas) {
+            console.error("Elemento com ID 'canvas-area' não encontrado após injeção de HTML.");
+            return;
+        }
+        imageCanvas.appendChild(img);
+
+        try {
+            await new Promise((resolve, reject) => {
+                img.onload = resolve;
+                img.onerror = reject;
+            });
+        } catch (error) {
+            rootElement.innerHTML = `<p style='color: red;'>Erro ao carregar a imagem: ${imagePath}</p>`;
+            return;
+        }
+
+        let imageCurrentZoom = 100;
+        let imagePanX = 0;
+        let imagePanY = 0;
+        let imageIsPanning = false;
+        let imageStartX = 0;
+        let imageStartY = 0;
+        let imageLastTouchDist = null;
+        let imageRafId = null;
+
+        const scheduleImageUpdate = () => {
+            if (imageRafId) return;
+            imageRafId = requestAnimationFrame(() => {
+                this.updateImageTransform(img, imageCanvas, imageCurrentZoom, imagePanX, imagePanY, uniqueImageId);
+                imageRafId = null;
+            });
         };
 
-        const applyInitialZoom = (percentage) => {
-            currentDisplayedPercentage = percentage;
-            scroll = getScrollFromDisplayedPercentage(percentage);
-            const zoomScale = 100 / percentage;
+        const clampImagePan = (imgElement, canvasElement, currentZoom, panX, panY) => {
+            const scaledWidth = imgElement.naturalWidth * (currentZoom / 100);
+            const scaledHeight = imgElement.naturalHeight * (currentZoom / 100);
+            const canvasRect = canvasElement.getBoundingClientRect();
 
-            viewWidth = initialViewBoxWidth * zoomScale;
-            viewHeight = initialViewBoxHeight * zoomScale;
+            let clampedPanX = panX;
+            let clampedPanY = panY;
 
-            offsetX = (initialViewBoxX + initialViewBoxWidth / 2) - (viewWidth / 2);
-            offsetY = (initialViewBoxY + initialViewBoxHeight / 2) - (viewHeight / 2);
+            if (scaledWidth <= canvasRect.width) {
+                clampedPanX = 0;
+            } else {
+                const maxPanX = (scaledWidth - canvasRect.width) / 2;
+                clampedPanX = Math.min(maxPanX, Math.max(-maxPanX, panX));
+            }
 
-            updateViewBox();
-            updateZoomLabel();
+            if (scaledHeight <= canvasRect.height) {
+                clampedPanY = 0;
+            } else {
+                const maxPanY = (scaledHeight - canvasRect.height) / 2;
+                clampedPanY = Math.min(maxPanY, Math.max(-maxPanY, panY));
+            }
+            return { x: clampedPanX, y: clampedPanY };
         };
 
-        // Aplica o zoom inicial definido pela constante
-        applyInitialZoom(DEFAULT_SVG_ZOOM);
+        this.updateImageTransform = (imgElement, canvasElement, currentZoom, panX, panY, id) => {
+            const clamped = clampImagePan(imgElement, canvasElement, currentZoom, panX, panY);
+            imagePanX = clamped.x;
+            imagePanY = clamped.y;
+            imgElement.style.transform = `translate(${imagePanX}px, ${imagePanY}px) scale(${currentZoom / 100})`;
+            const zoomLabel = document.getElementById(`image-zoom-label-${id}`);
+            if (zoomLabel) zoomLabel.textContent = `${currentZoom}%`;
+        };
 
-        // Event listeners para interações do mouse e toque
-        canvas.addEventListener("wheel", (e) => {
-            e.preventDefault();
-            const delta = e.deltaY > 0 ? -5 : 5;
-            simulateZoom(delta);
-        });
+        const applyImageZoom = (delta) => {
+            const newZoom = Math.max(25, Math.min(400, imageCurrentZoom + delta));
+            if (newZoom !== imageCurrentZoom) {
+                imageCurrentZoom = newZoom;
+                scheduleImageUpdate();
+            }
+        };
 
-        canvas.addEventListener("mousedown", (e) => {
-            isPanning = true;
-            startX = e.clientX;
-            startY = e.clientY;
-            canvas.style.cursor = "grabbing";
+        document.getElementById(`btn-image-zoom-in-${uniqueImageId}`).onclick = function () { ButtonFeedback.apply(this); applyImageZoom(25); };
+        document.getElementById(`btn-image-zoom-out-${uniqueImageId}`).onclick = function () { ButtonFeedback.apply(this); applyImageZoom(-25); };
+        document.getElementById(`btn-image-reset-${uniqueImageId}`).onclick = function () {
+            ButtonFeedback.apply(this);
+            imageCurrentZoom = 100;
+            imagePanX = 0;
+            imagePanY = 0;
+            scheduleImageUpdate();
+        };
+        document.getElementById(`btn-image-center-${uniqueImageId}`).onclick = function () {
+            ButtonFeedback.apply(this);
+            imagePanX = 0;
+            imagePanY = 0;
+            scheduleImageUpdate();
+        };
+
+        FullscreenHandler.attach(`btn-image-fullscreen-${uniqueImageId}`, `image-container-${uniqueImageId}`);
+        DownloadHandler.attachImage(`btn-image-download-${uniqueImageId}`, img, imageTitle, imagePath);
+
+        imageCanvas.addEventListener("mousedown", (e) => {
+            imageIsPanning = true;
+            imageStartX = e.clientX;
+            imageStartY = e.clientY;
+            imageCanvas.style.cursor = "grabbing";
         });
 
         window.addEventListener("mouseup", () => {
-            isPanning = false;
-            canvas.style.cursor = "grab";
-        });
-
-        window.addEventListener("mouseleave", () => isPanning = false);
-
-        canvas.addEventListener("mousemove", (e) => {
-            if (!isPanning) return;
-            const dx = e.clientX - startX;
-            const dy = e.clientY - startY;
-            startX = e.clientX;
-            startY = e.clientY;
-            const rect = svg.getBoundingClientRect();
-            const scaleFactorForPan = viewWidth / rect.width;
-            
-            offsetX -= dx * scaleFactorForPan;
-            offsetY -= dy * scaleFactorForPan;
-            updateViewBox();
-        });
-
-        canvas.addEventListener("touchstart", (e) => {
-            if (e.touches.length === 1) {
-                isPanning = true;
-                startX = e.touches[0].clientX;
-                startY = e.touches[0].clientY;
-            } else if (e.touches.length === 2) {
-                lastTouchDist = Math.hypot(e.touches[1].clientX - e.touches[0].clientX, e.touches[1].clientY - e.touches[0].clientY);
-                isPanning = false;
-            }
-        }, { passive: false });
-
-        canvas.addEventListener("touchmove", (e) => {
-            e.preventDefault();
-            if (e.touches.length === 1 && isPanning) {
-                const dx = e.touches[0].clientX - startX;
-                const dy = e.touches[0].clientY - startY;
-                startX = e.touches[0].clientX;
-                startY = e.touches[0].clientY;
-                const rect = svg.getBoundingClientRect();
-                const scaleFactorForPan = viewWidth / rect.width;
-                offsetX -= dx * scaleFactorForPan;
-                offsetY -= dy * scaleFactorForPan;
-                updateViewBox();
-            } else if (e.touches.length === 2) {
-                const touch1 = e.touches[0];
-                const touch2 = e.touches[1];
-                const currentDist = Math.hypot(touch2.clientX - touch1.clientX, touch2.clientY - touch1.clientY);
-
-                if (lastTouchDist !== null) {
-                    const delta = currentDist - lastTouchDist;
-                    simulateZoom(delta * 0.7);
-                }
-                lastTouchDist = currentDist;
-                isPanning = false;
-            }
-        }, { passive: false });
-
-        canvas.addEventListener("touchend", (e) => {
-            isPanning = false;
-            if (e.touches.length < 2) {
-                lastTouchDist = null;
-            }
-        });
-
-        // Função para dar feedback visual ao clique do botão
-        const darFeedbackVisual = (btn) => {
-            btn.classList.add("clicked");
-            setTimeout(() => btn.classList.remove("clicked"), 250);
-        };
-
-        // Associa os event listeners aos botões, usando os IDs únicos
-        document.getElementById(`btn-zoom-in-${uniqueSvgId}`).onclick = function () { darFeedbackVisual(this); simulateZoom(25); };
-        document.getElementById(`btn-zoom-out-${uniqueSvgId}`).onclick = function () { darFeedbackVisual(this); simulateZoom(-25); };
-        document.getElementById(`btn-reset-${uniqueSvgId}`).onclick = function () {
-            darFeedbackVisual(this);
-            applyInitialZoom(DEFAULT_SVG_ZOOM); // Reset usando a constante
-        };
-        document.getElementById(`btn-center-${uniqueSvgId}`).onclick = function () {
-            darFeedbackVisual(this);
-            offsetX = (initialViewBoxX + initialViewBoxWidth / 2) - (viewWidth / 2);
-            offsetY = (initialViewBoxY + initialViewBoxHeight / 2) - (viewHeight / 2);
-            updateViewBox();
-        };
-        document.getElementById(`btn-fullscreen-${uniqueSvgId}`).onclick = function () {
-            darFeedbackVisual(this);
-            const container = document.getElementById(`svg-container-${uniqueSvgId}`);
-            if (!document.fullscreenElement) container.requestFullscreen();
-            else document.exitFullscreen();
-        };
-
-        document.getElementById(`btn-fullscreen-${uniqueSvgId}`).onclick = function () {
-        const container = document.getElementById(`svg-container-${uniqueSvgId}`);
-        if (!document.fullscreenElement) {
-            // Chame requestFullscreen() *diretamente aqui*
-            container.requestFullscreen().catch(err => {
-                console.error(`Erro ao tentar modo tela cheia para SVG: ${err.message} (${err.name})`);
-            });
-        } else {
-            document.exitFullscreen();
-        }
-        darFeedbackVisual(this);
-        };
-
-        document.getElementById(`btn-download-${uniqueSvgId}`).onclick = function () {
-            darFeedbackVisual(this);
-            const data = new XMLSerializer().serializeToString(svg);
-            const blob = new Blob([data], { type: "image/svg+xml" });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement("a");
-            a.href = url;
-            a.download = diagramTitle.replace(/\s/g, "_") + ".svg"; // Usa o título para o nome do arquivo
-            a.click();
-            URL.revokeObjectURL(url);
-        };
-
-        // Listener para exibir coordenadas do mouse no SVG
-        svg.addEventListener("mousemove", (e) => {
-            const rect = svg.getBoundingClientRect();
-            const x = offsetX + (e.clientX - rect.left) / rect.width * viewWidth;
-            const y = offsetY + (e.clientY - rect.top) / rect.height * viewHeight;
-            document.getElementById(`coord-display-${uniqueSvgId}`).textContent = `X: ${x.toFixed(1)} Y: ${y.toFixed(1)}`;
-        });
-    } catch (error) {
-        console.error("Erro ao inicializar SVG embed:", error);
-        rootElement.innerHTML = `<p style='color: red;'>Erro ao carregar ou processar SVG: ${error.message}</p>`;
-    }
-}
-
-// --- IMAGE EMBED HELPER FUNCTION ---
-// Esta função é responsável por inicializar um único embed de Imagem.
-// Ela recebe o elemento raiz (div) onde a imagem será incorporada.
-async function createImageEmbed(rootElement) {
-    // Verifica se o elemento raiz existe
-    if (!rootElement) return;
-
-    // Obtém o caminho da imagem e o título dos atributos data do elemento raiz
-    const imagePath = rootElement.dataset.imagePath; // Agora usa data-image-path
-    const imageTitle = rootElement.dataset.title || "Imagem";
-    // Gera um ID único para este embed de imagem
-    const uniqueImageId = `my-image-${Math.random().toString(36).substr(2, 9)}`;
-
-    // Se o caminho da imagem não estiver definido, exibe uma mensagem de erro
-    if (!imagePath) {
-        rootElement.innerHTML = "<p style='color: red;'>Atributo data-image-path não definido no elemento image-root.</p>";
-        return;
-    }
-
-    // Injeta a estrutura HTML e CSS dentro do elemento raiz
-    rootElement.innerHTML = `
-      <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-      <style>
-        /* Keyframes para o feedback visual dos botões (reaproveitado) */
-        @keyframes feedback-glow {
-          0% { transform: scale(1); text-shadow: none; }
-          50% { transform: scale(1.15); text-shadow: 0 0 4px var(--md-accent-fg-color); }
-          100% { transform: scale(1); text-shadow: none; }
-        }
-
-        /* Estilo base para os botões de ícone (reaproveitado) */
-        .icon-btn {
-          width: 40px;
-          height: 40px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          padding: 0;
-          margin: 0;
-          background: transparent;
-          border: none;
-          border-radius: 6px;
-          cursor: pointer;
-          transition: background-color 0.2s ease;
-        }
-
-        .icon-btn:hover {
-          background-color: var(--md-accent-fg-color--transparent);
-        }
-
-        .icon-btn .material-icons {
-          font-size: 1.2rem;
-          color: var(--md-primary-bg-color) !important;
-          transition: transform 0.2s ease, color 0.2s ease;
-        }
-
-        .icon-btn.clicked .material-icons {
-          animation: feedback-glow 0.25s ease;
-        }
-
-        /* Estilos específicos para o contêiner da imagem, usando o ID único */
-        #image-container-${uniqueImageId} {
-          border: 1px solid var(--md-default-fg-color--lighter);
-          background-color: var(--md-default-bg-color);
-        }
-
-        /* Estilos para as barras de ferramentas (comuns para SVG e Imagem) */
-        .toolbar-top, .toolbar-bottom {
-          min-height: 48px; display: flex; align-items: center; padding: 8px 12px; box-sizing: border-box; flex-wrap: wrap;
-        }
-        .toolbar-top {
-          border-bottom: 1px solid var(--md-primary-bg-color-light); justify-content: center; background-color: var(--md-primary-fg-color); color: var(--md-primary-bg-color);
-        }
-        .toolbar-bottom {
-          border-top: 1px solid var(--md-primary-bg-color-light); justify-content: space-between; background-color: var(--md-primary-fg-color); color: var(--md-primary-bg-color); gap: 8px;
-        }
-
-        /* Estilos para o título da imagem (usando o ID único) */
-        #image-title-${uniqueImageId} {
-          font-family: var(--md-text-font-family); font-size: 0.9rem; font-weight: bold; color: inherit;
-        }
-
-        /* Estilos para o label de zoom e display de coordenadas (usando IDs únicos) */
-        #image-zoom-label-${uniqueImageId}, #image-coord-display-${uniqueImageId} {
-          font-family: var(--md-text-font-family); font-size: 0.64rem; font-weight: bold; color: inherit;
-        }
-
-        /* Estilos para grupos de botões (reaproveitado) */
-        .button-group, .coord-group { display: flex; align-items: center; gap: 8px; }
-        
-        /* Media queries para responsividade */
-        @media (max-width: 600px) {
-          .toolbar-bottom { flex-wrap: wrap; justify-content: center; gap: 4px; }
-          .button-group, .coord-group { flex-wrap: wrap; gap: 4px; }
-          .icon-btn { width: 32px; height: 32px; }
-          .icon-btn .material-icons { font-size: 1rem; }
-          #image-zoom-label-${uniqueImageId}, #image-coord-display-${uniqueImageId} { font-size: 0.5rem; }
-          #image-title-${uniqueImageId} { font-size: 0.8rem; }
-        }
-      </style>
-
-      <div id="image-container-${uniqueImageId}" class="image-container-unique" style="width:100%; height:100%; display:flex; flex-direction:column;">
-        <div class="toolbar-top"><span id="image-title-${uniqueImageId}" class="image-title-unique">${imageTitle}</span></div>
-        <div id="canvas-area-${uniqueImageId}" style="flex:1; overflow:hidden; position:relative; display:flex; justify-content:center; align-items:center;"></div>
-        <div class="toolbar-bottom">
-          <div class="button-group">
-            <button class="icon-btn" id="btn-image-zoom-out-${uniqueImageId}" title="Reduzir Zoom"><span class="material-icons">remove</span></button>
-            <span id="image-zoom-label-${uniqueImageId}" class="image-zoom-label-unique">100%</span>
-            <button class="icon-btn" id="btn-image-zoom-in-${uniqueImageId}" title="Aumentar Zoom"><span class="material-icons">add</span></button>
-            <button class="icon-btn" id="btn-image-reset-${uniqueImageId}" title="Resetar Zoom"><span class="material-icons">refresh</span></button>
-            <button class="icon-btn" id="btn-image-center-${uniqueImageId}" title="Centralizar"><span class="material-icons">center_focus_strong</span></button>
-          </div>
-          <div class="coord-group">
-            <span id="image-coord-display-${uniqueImageId}" class="image-coord-display-unique"></span>
-            <button class="icon-btn" id="btn-image-download-${uniqueImageId}" title="Download"><span class="material-icons">download</span></button>
-            <button class="icon-btn" id="btn-image-fullscreen-${uniqueImageId}" title="Tela cheia"><span class="material-icons">fullscreen</span></button>
-          </div>
-        </div>
-      </div>
-    `;
-
-    // Cria e configura o elemento de imagem
-    const img = new Image();
-    img.src = imagePath;
-    img.id = `img-${uniqueImageId}`; // Usa um ID único para a imagem também
-    img.style.objectFit = "contain";
-    img.style.transformOrigin = "center";
-    img.style.willChange = "transform";
-    img.style.transition = "transform 0.05s ease-out"; // Transição suave para transformações
-
-    // Adiciona a imagem ao canvas
-    const imageCanvas = document.getElementById(`canvas-area-${uniqueImageId}`);
-    if (!imageCanvas) {
-        console.error("Elemento com ID 'canvas-area' não encontrado após injeção de HTML.");
-        return;
-    }
-    imageCanvas.appendChild(img);
-
-    try {
-        // Espera a imagem carregar para garantir que naturalWidth/Height estejam disponíveis
-        await new Promise((resolve, reject) => {
-            img.onload = resolve;
-            img.onerror = reject;
-        });
-    } catch (error) {
-        rootElement.innerHTML = `<p style='color: red;'>Erro ao carregar a imagem: ${imagePath}</p>`;
-        return; // Sai se a imagem falhar ao carregar
-    }
-
-    // Variáveis de estado para o controle da imagem
-    let imageCurrentZoom = 100;
-    let imagePanX = 0;
-    let imagePanY = 0;
-    let imageIsPanning = false;
-    let imageStartX = 0;
-    let imageStartY = 0;
-    let imageLastTouchDist = null;
-    let imageRafId = null; // Usado para requestAnimationFrame
-
-    // Função para agendar a atualização da transformação da imagem
-    const scheduleImageUpdate = () => {
-        if (imageRafId) return;
-        imageRafId = requestAnimationFrame(() => {
-            updateImageTransform();
-            imageRafId = null;
-        });
-    };
-
-    // Função para limitar o movimento de pan da imagem dentro do canvas
-    const clampImagePan = () => {
-        const scaledWidth = img.naturalWidth * (imageCurrentZoom / 100);
-        const scaledHeight = img.naturalHeight * (imageCurrentZoom / 100);
-        const canvasRect = imageCanvas.getBoundingClientRect();
-
-        if (scaledWidth <= canvasRect.width) {
-            imagePanX = 0;
-        } else {
-            const maxPanX = (scaledWidth - canvasRect.width) / 2;
-            imagePanX = Math.min(maxPanX, Math.max(-maxPanX, imagePanX));
-        }
-
-        if (scaledHeight <= canvasRect.height) {
-            imagePanY = 0;
-        } else {
-            const maxPanY = (scaledHeight - canvasRect.height) / 2;
-            imagePanY = Math.min(maxPanY, Math.max(-maxPanY, imagePanY));
-        }
-    };
-
-    // Função para aplicar a transformação CSS e atualizar o label de zoom
-    const updateImageTransform = () => {
-        clampImagePan();
-        img.style.transform = `translate(${imagePanX}px, ${imagePanY}px) scale(${imageCurrentZoom / 100})`;
-        const zoomLabel = document.getElementById(`image-zoom-label-${uniqueImageId}`);
-        if (zoomLabel) zoomLabel.textContent = `${imageCurrentZoom}%`;
-    };
-
-    // Função para aplicar o zoom à imagem
-    const applyImageZoom = (delta) => {
-        const newZoom = Math.max(25, Math.min(400, imageCurrentZoom + delta));
-        if (newZoom !== imageCurrentZoom) {
-            imageCurrentZoom = newZoom;
-            scheduleImageUpdate();
-        }
-    };
-
-    // Função para dar feedback visual ao clique do botão (imagem)
-    const darFeedbackVisualForImage = (btn) => {
-        btn.classList.add("clicked");
-        setTimeout(() => btn.classList.remove("clicked"), 250);
-    };
-
-    // Função auxiliar para associar feedback visual e callback a botões
-    const withFeedbackForImage = (btnId, callback) => {
-        const btn = document.getElementById(btnId);
-        if (btn) {
-            btn.addEventListener("click", () => {
-                darFeedbackVisualForImage(btn);
-                callback();
-            });
-        } else {
-            console.warn(`Botão com ID '${btnId}' não encontrado.`);
-        }
-    };
-
-    // --- Botões da Barra de Ferramentas (Imagem) ---
-    withFeedbackForImage(`btn-image-zoom-in-${uniqueImageId}`, () => applyImageZoom(25));
-    withFeedbackForImage(`btn-image-zoom-out-${uniqueImageId}`, () => applyImageZoom(-25));
-    withFeedbackForImage(`btn-image-reset-${uniqueImageId}`, () => {
-        imageCurrentZoom = 100;
-        imagePanX = 0;
-        imagePanY = 0;
-        scheduleImageUpdate();
-    });
-    withFeedbackForImage(`btn-image-center-${uniqueImageId}`, () => {
-        imagePanX = 0;
-        imagePanY = 0;
-        scheduleImageUpdate();
-    });
-    withFeedbackForImage(`btn-image-download-${uniqueImageId}`, () => {
-        const a = document.createElement("a");
-        a.href = img.src;
-        const fileExtension = imagePath.split(".").pop() || "png";
-        a.download = imageTitle.replace(/\s/g, "_") + "." + fileExtension;
-        a.click();
-    });
-    withFeedbackForImage(`btn-image-fullscreen-${uniqueImageId}`, () => {
-        const el = document.getElementById(`image-container-${uniqueImageId}`);
-        if (el) {
-            if (!document.fullscreenElement) {
-                el.requestFullscreen().catch(err => {
-                    console.error(`Erro ao tentar modo tela cheia: ${err.message} (${err.name})`);
-                });
-            } else {
-                document.exitFullscreen();
-            }
-        }
-    });
-
-    // --- Interação do Mouse (Pan e Coordenadas para Imagem) ---
-    let imageIsDragging = false;
-    imageCanvas.addEventListener("mousedown", (e) => {
-        imageIsDragging = true;
-        imageStartX = e.clientX;
-        imageStartY = e.clientY;
-        imageCanvas.style.cursor = "grabbing";
-    });
-
-    window.addEventListener("mouseup", () => {
-        imageIsDragging = false;
-        imageCanvas.style.cursor = "grab";
-    });
-
-    window.addEventListener("mousemove", (e) => {
-        const coordDisplay = document.getElementById(`image-coord-display-${uniqueImageId}`);
-        if (coordDisplay) {
-            const rect = img.getBoundingClientRect();
-            const xRelativeToCanvas = e.clientX - imageCanvas.getBoundingClientRect().left;
-            const yRelativeToCanvas = e.clientY - imageCanvas.getBoundingClientRect().top;
-
-            const imageCenteredX = imageCanvas.offsetWidth / 2 + imagePanX;
-            const imageCenteredY = imageCanvas.offsetHeight / 2 + imagePanY;
-
-            const offsetXFromImageCenter = xRelativeToCanvas - imageCenteredX;
-            const offsetYFromImageCenter = yRelativeToCanvas - imageCenteredY;
-
-            const originalImgX = (img.naturalWidth / 2) + (offsetXFromImageCenter / (imageCurrentZoom / 100));
-            const originalImgY = (img.naturalHeight / 2) + (offsetYFromImageCenter / (imageCurrentZoom / 100));
-
-            coordDisplay.textContent = `X: ${originalImgX.toFixed(0)} Y: ${originalImgY.toFixed(0)}`;
-        }
-
-        if (!imageIsDragging) return;
-        imagePanX += e.clientX - imageStartX;
-        imagePanY += e.clientY - imageStartY;
-        imageStartX = e.clientX;
-        imageStartY = e.clientY;
-        scheduleImageUpdate();
-    });
-
-    // --- Interação de Toque (Pan e Zoom para Imagem) ---
-    imageCanvas.addEventListener("touchstart", (e) => {
-        if (e.touches.length === 1) {
-            imageIsPanning = true;
-            imageStartX = e.touches[0].clientX;
-            imageStartY = e.touches[0].clientY;
-        } else if (e.touches.length === 2) {
             imageIsPanning = false;
-            imageLastTouchDist = Math.hypot(
-                e.touches[1].clientX - e.touches[0].clientX,
-                e.touches[1].clientY - e.touches[0].clientY
-            );
-        }
-    }, { passive: false });
+            imageCanvas.style.cursor = "grab";
+        });
 
-    imageCanvas.addEventListener("touchmove", (e) => {
-        e.preventDefault();
-        if (e.touches.length === 1 && imageIsPanning) {
-            const dx = e.touches[0].clientX - imageStartX;
-            const dy = e.touches[0].clientY - imageStartY;
-            imageStartX = e.touches[0].clientX;
-            imageStartY = e.touches[0].clientY;
-            imagePanX += dx;
-            imagePanY += dy;
-            scheduleImageUpdate();
-        } else if (e.touches.length === 2) {
-            const [touch1, touch2] = e.touches;
-            const currentDist = Math.hypot(
-                touch2.clientX - touch1.clientX,
-                touch2.clientY - touch1.clientY
-            );
-            if (imageLastTouchDist !== null) {
-                const delta = currentDist - imageLastTouchDist;
-                applyImageZoom(delta > 0 ? 10 : -10);
+        window.addEventListener("mousemove", (e) => {
+            const coordDisplay = document.getElementById(`image-coord-display-${uniqueImageId}`);
+            if (coordDisplay) {
+                const xRelativeToCanvas = e.clientX - imageCanvas.getBoundingClientRect().left;
+                const yRelativeToCanvas = e.clientY - imageCanvas.getBoundingClientRect().top;
+
+                const imageCenteredX = imageCanvas.offsetWidth / 2 + imagePanX;
+                const imageCenteredY = imageCanvas.offsetHeight / 2 + imagePanY;
+
+                const offsetXFromImageCenter = xRelativeToCanvas - imageCenteredX;
+                const offsetYFromImageCenter = yRelativeToCanvas - imageCenteredY;
+
+                const originalImgX = (img.naturalWidth / 2) + (offsetXFromImageCenter / (imageCurrentZoom / 100));
+                const originalImgY = (img.naturalHeight / 2) + (offsetYFromImageCenter / (imageCurrentZoom / 100));
+
+                coordDisplay.textContent = `X: ${originalImgX.toFixed(0)} Y: ${originalImgY.toFixed(0)}`;
             }
-            imageLastTouchDist = currentDist;
-        }
-    }, { passive: false });
 
-    imageCanvas.addEventListener("touchend", () => {
-        imageIsPanning = false;
-        imageLastTouchDist = null;
-    });
+            if (!imageIsPanning) return;
+            imagePanX += e.clientX - imageStartX;
+            imagePanY += e.clientY - imageStartY;
+            imageStartX = e.clientX;
+            imageStartY = e.clientY;
+            scheduleImageUpdate();
+        });
 
-    // Inicializa a transformação da imagem
-    updateImageTransform();
+        imageCanvas.addEventListener("touchstart", (e) => {
+            if (e.touches.length === 1) {
+                imageIsPanning = true;
+                imageStartX = e.touches[0].clientX;
+                imageStartY = e.touches[0].clientY;
+            } else if (e.touches.length === 2) {
+                imageIsPanning = false;
+                imageLastTouchDist = Math.hypot(
+                    e.touches[1].clientX - e.touches[0].clientX,
+                    e.touches[1].clientY - e.touches[0].clientY
+                );
+            }
+        }, { passive: false });
+
+        imageCanvas.addEventListener("touchmove", (e) => {
+            e.preventDefault();
+            if (e.touches.length === 1 && imageIsPanning) {
+                const dx = e.touches[0].clientX - imageStartX;
+                const dy = e.touches[0].clientY - imageStartY;
+                imageStartX = e.touches[0].clientX;
+                imageStartY = e.touches[0].clientY;
+                imagePanX += dx;
+                imagePanY += dy;
+                scheduleImageUpdate();
+            } else if (e.touches.length === 2) {
+                const [touch1, touch2] = e.touches;
+                const currentDist = Math.hypot(
+                    touch2.clientX - touch1.clientX,
+                    touch2.clientY - touch1.clientY
+                );
+                if (imageLastTouchDist !== null) {
+                    const delta = currentDist - imageLastTouchDist;
+                    applyImageZoom(delta > 0 ? 10 : -10);
+                }
+                imageLastTouchDist = currentDist;
+            }
+        }, { passive: false });
+
+        imageCanvas.addEventListener("touchend", (e) => {
+            imageIsPanning = false;
+            if (e.touches.length < 2) {
+                imageLastTouchDist = null;
+            }
+        });
+
+        this.updateImageTransform(img, imageCanvas, imageCurrentZoom, imagePanX, imagePanY, uniqueImageId);
+    }
 }
 
-// --- Chamadas de inicialização no DOMContentLoaded ---
-// Estas chamadas agora iteram sobre os elementos com as classes específicas
-// para inicializar múltiplos embeds de SVG e Imagem.
-document.addEventListener("DOMContentLoaded", () => {
-    // Itera sobre todos os elementos com a classe 'svg-embed-container'
-    document.querySelectorAll(".svg-embed-container").forEach(element => {
-        createSvgEmbed(element);
-    });
+// --- CLASSE PARA GERENCIAR A INICIALIZAÇÃO DOS EMBEDS ---
+class EmbedManager {
+    constructor() {
+        this.svgEmbed = new SvgEmbed();
+        this.imageEmbed = new ImageEmbed();
+    }
 
-    // Itera sobre todos os elementos com a classe 'image-embed-container'
-    document.querySelectorAll(".image-embed-container").forEach(element => {
-        createImageEmbed(element);
-    });
+    /**
+     * Inicializa todos os embeds de SVG e Imagem na página.
+     */
+    initializeAllEmbeds() {
+        document.querySelectorAll(".svg-embed-container").forEach(element => {
+            this.svgEmbed.create(element);
+        });
+
+        document.querySelectorAll(".image-embed-container").forEach(element => {
+            this.imageEmbed.create(element);
+        });
+    }
+}
+
+// --- Chamada de inicialização no DOMContentLoaded ---
+document.addEventListener("DOMContentLoaded", () => {
+    const embedManager = new EmbedManager();
+    embedManager.initializeAllEmbeds();
 });
