@@ -91,7 +91,7 @@ class SvgZoomPan {
      */
     simulateZoom(percentageChange) {
         let newPercentage = this.currentDisplayedPercentage + percentageChange;
-        newPercentage = Math.max(25, Math.min(400, newPercentage)); // Limita o zoom
+        newPercentage = Math.max(25, Math.min(600, newPercentage)); // Limita o zoom
 
         if (newPercentage === this.currentDisplayedPercentage) return; // Não faz nada se o zoom não mudar
 
