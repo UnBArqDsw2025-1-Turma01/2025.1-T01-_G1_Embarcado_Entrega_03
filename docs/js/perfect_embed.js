@@ -742,7 +742,7 @@ class ImageEmbed {
         };
 
         const applyImageZoom = (delta) => {
-            const newZoom = Math.max(25, Math.min(400, imageCurrentZoom + delta));
+            const newZoom = Math.max(25, Math.min(600, imageCurrentZoom + delta));
             if (newZoom !== imageCurrentZoom) {
                 imageCurrentZoom = newZoom;
                 scheduleImageUpdate();
