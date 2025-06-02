@@ -554,6 +554,21 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Padrões Criacionais e a Responsabilidade de Instanciação">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#aplicacao-no-projeto" class="md-nav__link">
+    <span class="md-ellipsis">
+      Aplicação no Projeto
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -766,6 +781,7 @@
 <hr />
 <p>Esses padrões são fundamentais para lidar com a complexidade da criação de objetos em sistemas orientados a objetos, tornando o software mais fácil de manter, evoluir e otimizar ao longo do tempo.</p>
 <hr />
+<h3 id="aplicacao-no-projeto">Aplicação no Projeto</h3>
 <p>Para a utilização do padrão Singleton, foi inicialmente considerada a possibilidade de instanciar múltiplos objetos da classe RegistradorLog, como nos serviços de monitoramento e análise de quedas. No entanto, essa abordagem foi descartada, pois poderia resultar em registros inconsistentes, duplicados ou até mesmo em conflitos de concorrência durante o processo de log.</p>
 <p>Com o Singleton, todos os eventos, sejam quedas detectadas, notificações enviadas ou erros internos seriam registrados por meio de uma única instância. Isso evitaria duplicações de log, inconsistências e problemas de concorrência que poderiam surgir caso diferentes partes do sistema tentassem gerenciar seus próprios registros de forma independente. Assim, qualquer componente do sistema que precisasse registrar um evento acessaria a instância única de RegistradorLog por meio do método estático getInstance(), garantindo a coesão do registro de eventos no sistema.</p>
 <hr />
