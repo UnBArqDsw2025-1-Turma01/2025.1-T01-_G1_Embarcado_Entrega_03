@@ -557,6 +557,33 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#implementacao-em-codigo-singleton" class="md-nav__link">
+    <span class="md-ellipsis">
+      Implementação em código - Singleton
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#testando-o-singleton-do-registradorlog" class="md-nav__link">
+    <span class="md-ellipsis">
+      Testando o Singleton do RegistradorLog
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#resultados-dos-testes-singleton-do-registradorlog" class="md-nav__link">
+    <span class="md-ellipsis">
+      Resultados dos Testes Singleton do RegistradorLog
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#referencias" class="md-nav__link">
     <span class="md-ellipsis">
       Referências
@@ -737,6 +764,83 @@
 <div class="image-embed-container" data-image-path="../../assets/singleton.png" data-title="Singleton" style="height: 70vh;"></div>
 
 <p><br></p>
+<div style="text-align:center;">
+Autores: Altino Arthur, Márcio Henrique e Daniel de Sousa
+</div>
+
+<p><br></p>
+<h2 id="implementacao-em-codigo-singleton">Implementação em código - Singleton</h2>
+<pre><code class="language-java">
+public class RegistradorLog implements ListenerQueda {
+    private static RegistradorLog instance;
+
+    private RegistradorLog() {
+        // Construtor privado para implementar o Singleton
+        System.out.println(&quot;[RegistradorLog] Instância do RegistradorLog criada.&quot;);
+    }
+
+    public static RegistradorLog getInstance() {
+        if (instance == null) {
+            instance = new RegistradorLog();
+        }
+        return instance;
+    }
+
+    @Override
+    public void onQuedaDetectada(Monitoramento m, ResultadoAnalise r) {
+        System.out.println(&quot;[RegistradorLog] Queda detectada e registrada no log. &quot; + m.getResumo() + &quot; - Risco: &quot; + r.getRiscoQueda());
+    }
+}
+
+</code></pre>
+<div style="text-align:center;">
+Autores: Altino Arthur, Márcio Henrique e Daniel de Sousa
+</div>
+
+<p><br></p>
+<h2 id="testando-o-singleton-do-registradorlog">Testando o Singleton do RegistradorLog</h2>
+<pre><code class="language-java">import observer.*;
+public class SistemaMonitoramentoTest {
+
+    public static void main(String[] args) {
+        System.out.println(&quot;--- Testando o Singleton do RegistradorLog ---&quot;);
+
+        // Primeira tentativa de obter a instância
+        System.out.println(&quot;\nChamando RegistradorLog.getInstance() pela primeira vez...&quot;);
+        RegistradorLog log1 = RegistradorLog.getInstance();
+        System.out.println(&quot;log1 obtido: &quot; + log1); // Isso vai imprimir o endereço de memória do objeto
+
+        // Segunda tentativa de obter a instância
+        System.out.println(&quot;\nChamando RegistradorLog.getInstance() pela segunda vez...&quot;);
+        RegistradorLog log2 = RegistradorLog.getInstance();
+        System.out.println(&quot;log2 obtido: &quot; + log2); // Deve imprimir o MESMO endereço de memória do log1
+
+        // Terceira tentativa de obter a instância
+        System.out.println(&quot;\nChamando RegistradorLog.getInstance() pela terceira vez...&quot;);
+        RegistradorLog log3 = RegistradorLog.getInstance();
+        System.out.println(&quot;log3 obtido: &quot; + log3); // Também deve imprimir o MESMO endereço de memória
+
+        System.out.println(&quot;\n--- Verificando se as instâncias são as mesmas ---&quot;);
+
+        // Compara as referências para confirmar que são o mesmo objeto
+        boolean saoIguais1_2 = (log1 == log2);
+        boolean saoIguais2_3 = (log2 == log3);
+        boolean saoIguais1_3 = (log1 == log3);
+
+        System.out.println(&quot;log1 é o mesmo objeto que log2? &quot; + saoIguais1_2);
+        System.out.println(&quot;log2 é o mesmo objeto que log3? &quot; + saoIguais2_3);
+        System.out.println(&quot;log1 é o mesmo objeto que log3? &quot; + saoIguais1_3);
+        System.out.println(&quot;\n--- Teste de Singleton Concluído ---&quot;);
+    }
+}
+</code></pre>
+<div style="text-align:center;">
+Autores: Altino Arthur, Márcio Henrique e Daniel de Sousa
+</div>
+
+<h2 id="resultados-dos-testes-singleton-do-registradorlog">Resultados dos Testes Singleton do RegistradorLog</h2>
+<div class="image-embed-container" data-image-path="../../assets/test_singleton.png" data-title="Singleton" style="height: 70vh;"></div>
+
 <div style="text-align:center;">
 Autores: Altino Arthur, Márcio Henrique e Daniel de Sousa
 </div>
