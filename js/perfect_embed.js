@@ -1,4 +1,4 @@
-// --- MÓDULO SVG ZOOM/PAN ---
+// n'ao da pra dar zoom com a roda do mouse nas imagens que n'ao sao svg // --- MÓDULO SVG ZOOM/PAN ---
 /**
  * Classe responsável por gerenciar o zoom e pan de um elemento SVG.
  */
@@ -297,7 +297,7 @@ class FullscreenHandler {
                 ButtonFeedback.apply(this);
                 if (!document.fullscreenElement) {
                     container.requestFullscreen().catch(err => {
-                        console.error(`Erro ao tentar modo tela cheia: ${err.message} (${err.name})`);
+                        console.error(`Erro ao tentar modo tela cheia para '${containerId}': ${err.message} (${err.name})`);
                     });
                 } else {
                     document.exitFullscreen();
@@ -350,7 +350,7 @@ class DownloadHandler {
                 ButtonFeedback.apply(this);
                 const a = document.createElement("a");
                 a.href = imgElement.src;
-                const fileExtension = imagePath.split(".").pop() || "png";
+                const fileExtension = imagePath.split(".").pop() || "png"; // Fallback para png
                 a.download = fileName.replace(/\s/g, "_") + "." + fileExtension;
                 a.click();
             };
@@ -563,19 +563,21 @@ class SvgEmbed {
 
         if (!svgPath) {
             rootElement.innerHTML = "<p style='color: red;'>Atributo data-svg-path não definido.</p>";
+            console.error("Atributo 'data-svg-path' não encontrado no elemento raiz para SvgEmbed.");
             return;
         }
 
         try {
             const res = await fetch(svgPath);
-            if (!res.ok) throw new Error(`Erro ao carregar SVG: ${res.statusText}`);
+            if (!res.ok) throw new Error(`Erro ao carregar SVG: ${res.status} ${res.statusText}`);
             const text = await res.text();
             const parser = new DOMParser();
             const doc = parser.parseFromString(text, "image/svg+xml");
             const svg = doc.querySelector("svg");
 
             if (!svg) {
-                rootElement.innerHTML = "<p style='color:red'>SVG inválido.</p>";
+                rootElement.innerHTML = "<p style='color:red'>SVG inválido ou vazio.</p>";
+                console.error("O arquivo SVG carregado não contém um elemento <svg> válido.");
                 return;
             }
 
@@ -587,15 +589,15 @@ class SvgEmbed {
             rootElement.innerHTML = EmbedUIBuilder.getCommonHtml(uniqueSvgId, diagramTitle, 'svg');
 
             const canvas = document.getElementById(`canvas-area-${uniqueSvgId}`);
+            if (!canvas) {
+                 console.error("Elemento 'canvas-area' não encontrado para o SVG após a injeção do HTML.");
+                 return;
+            }
             canvas.appendChild(svg);
 
-            const originalContentBBox = svg.getBBox();
-            let initialViewBoxX = originalContentBBox.x;
-            let initialViewBoxY = originalContentBBox.y;
-            let initialViewBoxWidth = originalContentBBox.width;
-            let initialViewBoxHeight = originalContentBBox.height;
-
+            let initialViewBoxX, initialViewBoxY, initialViewBoxWidth, initialViewBoxHeight;
             const svgViewBoxAttr = svg.getAttribute("viewBox");
+
             if (svgViewBoxAttr) {
                 const parts = svgViewBoxAttr.split(" ").map(Number);
                 if (parts.length === 4 && !isNaN(parts[0])) {
@@ -603,9 +605,15 @@ class SvgEmbed {
                     initialViewBoxY = parts[1];
                     initialViewBoxWidth = parts[2];
                     initialViewBoxHeight = parts[3];
+                } else {
+                    console.warn("viewBox SVG inválido. Calculando a partir do getBBox().");
                 }
-            } else {
-                const padding = 10;
+            }
+            
+            // Fallback ou override se viewBox não for válido/existir
+            if (!svgViewBoxAttr || !initialViewBoxWidth || !initialViewBoxHeight) {
+                const originalContentBBox = svg.getBBox();
+                const padding = 10; // Adiciona um padding ao redor do conteúdo
                 initialViewBoxX = originalContentBBox.x - padding;
                 initialViewBoxY = originalContentBBox.y - padding;
                 initialViewBoxWidth = originalContentBBox.width + 2 * padding;
@@ -661,6 +669,7 @@ class ImageEmbed {
 
         if (!imagePath) {
             rootElement.innerHTML = "<p style='color: red;'>Atributo data-image-path não definido no elemento image-root.</p>";
+            console.error("Atributo 'data-image-path' não encontrado no elemento raiz para ImageEmbed.");
             return;
         }
 
@@ -670,9 +679,9 @@ class ImageEmbed {
         img.src = imagePath;
         img.id = `img-${uniqueImageId}`;
         img.style.objectFit = "contain";
-        img.style.transformOrigin = "center";
+        img.style.transformOrigin = "center"; // Changed to center for better pan logic
         img.style.willChange = "transform";
-        img.style.transition = "transform 0.05s ease-out";
+        img.style.transition = "transform 0.05s ease-out"; // Short transition for smoother zoom/pan feedback
 
         const imageCanvas = document.getElementById(`canvas-area-${uniqueImageId}`);
         if (!imageCanvas) {
@@ -688,6 +697,7 @@ class ImageEmbed {
             });
         } catch (error) {
             rootElement.innerHTML = `<p style='color: red;'>Erro ao carregar a imagem: ${imagePath}</p>`;
+            console.error(`Erro ao carregar imagem: ${imagePath}`, error);
             return;
         }
 
@@ -716,19 +726,13 @@ class ImageEmbed {
             let clampedPanX = panX;
             let clampedPanY = panY;
 
-            if (scaledWidth <= canvasRect.width) {
-                clampedPanX = 0;
-            } else {
-                const maxPanX = (scaledWidth - canvasRect.width) / 2;
-                clampedPanX = Math.min(maxPanX, Math.max(-maxPanX, panX));
-            }
+            // Pan limits are relative to the center of the canvas and the image
+            const maxAbsPanX = Math.max(0, (scaledWidth - canvasRect.width) / 2);
+            const maxAbsPanY = Math.max(0, (scaledHeight - canvasRect.height) / 2);
+            
+            clampedPanX = Math.max(-maxAbsPanX, Math.min(maxAbsPanX, panX));
+            clampedPanY = Math.max(-maxAbsPanY, Math.min(maxAbsPanY, panY));
 
-            if (scaledHeight <= canvasRect.height) {
-                clampedPanY = 0;
-            } else {
-                const maxPanY = (scaledHeight - canvasRect.height) / 2;
-                clampedPanY = Math.min(maxPanY, Math.max(-maxPanY, panY));
-            }
             return { x: clampedPanX, y: clampedPanY };
         };
 
@@ -738,7 +742,7 @@ class ImageEmbed {
             imagePanY = clamped.y;
             imgElement.style.transform = `translate(${imagePanX}px, ${imagePanY}px) scale(${currentZoom / 100})`;
             const zoomLabel = document.getElementById(`image-zoom-label-${id}`);
-            if (zoomLabel) zoomLabel.textContent = `${currentZoom}%`;
+            if (zoomLabel) zoomLabel.textContent = `${Math.round(currentZoom)}%`; // Round for display
         };
 
         const applyImageZoom = (delta) => {
@@ -748,6 +752,13 @@ class ImageEmbed {
                 scheduleImageUpdate();
             }
         };
+
+        // NEW: Evento de roda do mouse para zoom em imagens não SVG
+        imageCanvas.addEventListener("wheel", (e) => {
+            e.preventDefault(); // Impede o scroll da página
+            const delta = e.deltaY > 0 ? -25 : 25; // Determina a direção do zoom
+            applyImageZoom(delta);
+        });
 
         document.getElementById(`btn-image-zoom-in-${uniqueImageId}`).onclick = function () { ButtonFeedback.apply(this); applyImageZoom(25); };
         document.getElementById(`btn-image-zoom-out-${uniqueImageId}`).onclick = function () { ButtonFeedback.apply(this); applyImageZoom(-25); };
@@ -783,26 +794,34 @@ class ImageEmbed {
         window.addEventListener("mousemove", (e) => {
             const coordDisplay = document.getElementById(`image-coord-display-${uniqueImageId}`);
             if (coordDisplay) {
-                const xRelativeToCanvas = e.clientX - imageCanvas.getBoundingClientRect().left;
-                const yRelativeToCanvas = e.clientY - imageCanvas.getBoundingClientRect().top;
+                const imgRect = img.getBoundingClientRect();
+                const canvasRect = imageCanvas.getBoundingClientRect();
 
-                const imageCenteredX = imageCanvas.offsetWidth / 2 + imagePanX;
-                const imageCenteredY = imageCanvas.offsetHeight / 2 + imagePanY;
+                // Coordenadas do mouse em relação ao canvas
+                const mouseXRelativeToCanvas = e.clientX - canvasRect.left;
+                const mouseYRelativeToCanvas = e.clientY - canvasRect.top;
 
-                const offsetXFromImageCenter = xRelativeToCanvas - imageCenteredX;
-                const offsetYFromImageCenter = yRelativeToCanvas - imageCenteredY;
+                // Coordenadas do centro da imagem no canvas (após pan e considerando o tamanho original)
+                // É o centro do elemento <img> no canvas
+                const imgCenterCanvasX = (canvasRect.width / 2) + imagePanX;
+                const imgCenterCanvasY = (canvasRect.height / 2) + imagePanY;
 
-                const originalImgX = (img.naturalWidth / 2) + (offsetXFromImageCenter / (imageCurrentZoom / 100));
-                const originalImgY = (img.naturalHeight / 2) + (offsetYFromImageCenter / (imageCurrentZoom / 100));
+                // Deslocamento do mouse em relação ao centro da imagem no canvas
+                const offsetXFromImgCenter = mouseXRelativeToCanvas - imgCenterCanvasX;
+                const offsetYFromImgCenter = mouseYRelativeToCanvas - imgCenterCanvasY;
 
-                coordDisplay.textContent = `X: ${originalImgX.toFixed(0)} Y: ${originalImgY.toFixed(0)}`;
+                // Coordenadas em pixels originais da imagem (0,0 no canto superior esquerdo da imagem)
+                const originalImgX = (img.naturalWidth / 2) + (offsetXFromImgCenter / (imageCurrentZoom / 100));
+                const originalImgY = (img.naturalHeight / 2) + (offsetYFromImgCenter / (imageCurrentZoom / 100));
+
+                coordDisplay.textContent = `X: ${Math.round(originalImgX)} Y: ${Math.round(originalImgY)}`;
             }
 
             if (!imageIsPanning) return;
             imagePanX += e.clientX - imageStartX;
             imagePanY += e.clientY - imageStartY;
             imageStartX = e.clientX;
-            imageStartY = e.clientY;
+            imageStartY = e.startY;
             scheduleImageUpdate();
         });
 
@@ -836,9 +855,9 @@ class ImageEmbed {
                     touch2.clientX - touch1.clientX,
                     touch2.clientY - touch1.clientY
                 );
-                if (imageLastTouchDist !== null) {
+                if (this.lastTouchDist !== null) {
                     const delta = currentDist - imageLastTouchDist;
-                    applyImageZoom(delta > 0 ? 10 : -10);
+                    applyImageZoom(delta > 0 ? 10 : -10); // Ajusta sensibilidade do zoom por toque
                 }
                 imageLastTouchDist = currentDist;
             }
@@ -851,6 +870,7 @@ class ImageEmbed {
             }
         });
 
+        // Initial update to set correct transform and zoom label
         this.updateImageTransform(img, imageCanvas, imageCurrentZoom, imagePanX, imagePanY, uniqueImageId);
     }
 }

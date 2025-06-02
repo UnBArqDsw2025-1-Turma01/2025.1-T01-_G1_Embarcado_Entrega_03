@@ -734,11 +734,11 @@
 <p>Com o Singleton, todos os eventos, sejam quedas detectadas, notificações enviadas ou erros internos seriam registrados por meio de uma única instância. Isso evitaria duplicações de log, inconsistências e problemas de concorrência que poderiam surgir caso diferentes partes do sistema tentassem gerenciar seus próprios registros de forma independente. Assim, qualquer componente do sistema que precisasse registrar um evento acessaria a instância única de RegistradorLog por meio do método estático getInstance(), garantindo a coesão do registro de eventos no sistema.</p>
 <hr />
 <p><br></p>
-<div class="svg-embed-container" data-svg-path="../../assets/singleton.svg" data-title="Singleton" style="height: 70vh;"></div>
+<div class="image-embed-container" data-image-path="../../assets/singleton.png" data-title="Singleton" style="height: 70vh;"></div>
 
 <p><br></p>
 <div style="text-align:center;">
-Autor: Altino Arthur, Márcio Henrique e Daniel de Sousa
+Autores: Altino Arthur, Márcio Henrique e Daniel de Sousa
 </div>
 
 <p><br></p>
@@ -747,19 +747,14 @@ Autor: Altino Arthur, Márcio Henrique e Daniel de Sousa
 <p>Com o Factory Method, a criação de objetos Notificacao é centralizada e delegada à NotificacaoFactory e suas subclasses concretas, como a ConcreteFactory. Isso permite que o sistema crie diferentes tipos de notificações (por exemplo, NotificacaoSMS, NotificacaoEmail, NotificacaoApp) sem que o código cliente precise saber qual classe concreta está sendo instanciada. A ConcreteFactory encapsula a lógica de criação, decidindo qual tipo de Notificacao será produzido com base nos parâmetros fornecidos (tipo, prioridade, destinatário). Assim, qualquer componente do sistema que precise enviar uma notificação simplesmente "chama" o método criarNotificacao() da fábrica.</p>
 <hr />
 <p><br></p>
-<div class="svg-embed-container" data-svg-path="../../assets/fabric.svg" data-title="Factory Method" style="height: 70vh;"></div>
+<div class="image-embed-container" data-image-path="../../assets/fabric.png" data-title="Factory" style="height: 70vh;"></div>
 
 <p><br></p>
 <div style="text-align:center;">
-Autor: Altino Arthur, Márcio Henrique e Daniel de Sousa
+Autores: Altino Arthur, Márcio Henrique e Daniel de Sousa
 </div>
 
 <p><br></p>
-<p>Foco_01: Padrões de Projeto GoFs Criacionais</p>
-<p>Entrega Mínima: 1 Padrão GoF Criacional, com nível de modelagem e nível de implementação evidenciados (ou seja, código rodando e hospedado no repositório do projeto).</p>
-<p>Apresentação (para a professora) explicando o GoF Criacional, com: (i) rastro claro aos membros participantes (MOSTRAR QUADRO DE PARTICIPAÇÕES &amp; COMMITS); (ii) justificativas &amp; senso crítico sobre o padrão GOF criacional, e (iii) comentários gerais sobre o trabalho em equipe. Tempo da Apresentação: +/- 5min. Recomendação: Apresentar diretamente via Wiki ou GitPages do Projeto. Baixar os conteúdos com antecedência, evitando problemas de internet no momento de exposição nas Dinâmicas de Avaliação. Deve ser mostrado o GoF Criacional em execução no dia da apresentação.</p>
-<p>A Wiki ou GitPages do Projeto deve conter um tópico dedicado ao Módulo Padrões de Projeto GoFs Criacionais, com 1 padrão GoF Criacional (modelagem &amp; implementação, com código rodando), histórico de versões, referências, e demais detalhamentos gerados pela equipe nesse escopo.</p>
-<p>Demais orientações disponíveis nas Diretrizes (vide Moodle).</p>
 <h2 id="referencias">Referências</h2>
 <p>REFACTORING GURU. Padrões de projeto criacionais. Disponível em: https://refactoring.guru/pt-br/design-patterns/creational-patterns. Acesso em: 30 de maio de 2025.</p>
 <h2 id="historico-de-versoes">Histórico de Versões</h2>
