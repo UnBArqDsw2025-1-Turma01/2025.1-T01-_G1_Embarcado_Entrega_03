@@ -530,6 +530,19 @@
         
       
       
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    3.2. Padrões de Projeto GoFs Estruturais
+    
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
       <a href="./" class="md-nav__link md-nav__link--active">
         
   
@@ -541,6 +554,52 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Índice">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Índice
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#padroes-estruturais" class="md-nav__link">
+    <span class="md-ellipsis">
+      Padrões Estruturais
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#referencias" class="md-nav__link">
+    <span class="md-ellipsis">
+      Referências
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#historico-de-versoes" class="md-nav__link">
+    <span class="md-ellipsis">
+      Histórico de Versões
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
       
     </li>
   
@@ -643,11 +702,78 @@
 
 
 <h1 id="32-modulo-padroes-de-projeto-gofs-estruturais">3.2. Módulo Padrões de Projeto GoFs Estruturais</h1>
+<h2 id="padroes-estruturais">Padrões Estruturais</h2>
+<p>Ao modelar um sistema orientado a objetos, especialmente com múltiplas classes interconectadas, um dos principais desafios está em <strong>organizar e estruturar as relações entre objetos e classes</strong>, de forma que o sistema permaneça flexível, reutilizável e de fácil manutenção. Dentre eles:</p>
+<ol>
+<li>
+<p><strong>Composite</strong>: O padrão Composite tem como principal objetivo permitir que objetos sejam organizados em estruturas hierárquicas de árvore, onde objetos individuais e composições desses objetos são tratados de maneira uniforme.</p>
+</li>
+<li>
+<p><strong>Adapter</strong>:  Em sistemas que precisam integrar bibliotecas externas ou componentes legados, sem comprometer a arquitetura interna. O Adapter converte a interface de uma classe existente para uma interface esperada pelo cliente, promovendo reuso, desacoplamento e isolamento de dependências externas.</p>
+</li>
+</ol>
+<hr />
+<p>Inicialmente, considerou-se a criação de condicionais dentro da classe Notificacao, que verificariam o tipo de alerta e executariam manualmente o envio por cada canal necessário. No entanto, essa abordagem tornaria a classe Notificacao altamente acoplada às implementações de envio e dificultaria a manutenção e evolução do sistema, especialmente na inclusão de novos canais no futuro.</p>
+<p>Para resolver esse problema, foi adotado o padrão Composite, por meio da implementação da classe EnvioComposto. Essa classe implementa a interface IEnvio, assim como as implementações concretas EnvioEmail, EnvioSMS e EnvioPush, mas, diferentemente delas, agrega múltiplas estratégias de envio em uma estrutura unificada.</p>
+<hr />
+<p><br></p>
+<div class="svg-embed-container" data-svg-path="../../assets/Composite.svg" data-title="Composite" style="height: 70vh;"></div>
+
+<p><br></p>
+<div style="text-align:center;">
+Autor: Altino Arthur, Márcio Henrique e Daniel de Sousa
+</div>
+
+<p><br></p>
+<hr />
+<p>No decorrer de discussões , foi deciditoinserir lógica condicional no código cliente para lidar com cada tipo específico de sensor, como Giroscopio ou Acelerometro. Porém, essa abordagem introduziria alto acoplamento, complexidade e tornaria o sistema difícil de escalar com novos sensores. Como já até explicado em sala de aula do exemplo dos vários caminhos dado um local e destino, preencher de if-else seria algo "não elegante".</p>
+<p>Para resolver essa limitação, optou-se pela aplicação do padrão Adapter, por meio da criação da interface ISensorAdapter. Essa interface define os métodos esperados pelo sistema — como getDeltaGrau() e getDeltaTempo() — e serve como contrato único para qualquer sensor utilizado na análise.</p>
+<p>Cada tipo de sensor real (como Giroscopio e Acelerometro) é então encapsulado em sua respectiva classe adaptadora (GiroscopioAdapter, AcelerometroAdapter), que implementa ISensorAdapter e traduz os dados e comportamentos do sensor original para o formato esperado pelo sistema.</p>
+<p>O componente TargetMonitoramento agora trabalha diretamente com objetos do tipo ISensorAdapter, sem se preocupar com os detalhes de implementação dos sensores reais. Isso garante flexibilidade, facilidade de manutenção e prepara o sistema para adicionar novos sensores futuramente, bastando criar novos adapters compatíveis com a interface.</p>
+<hr />
+<p><br></p>
+<div class="svg-embed-container" data-svg-path="../../assets/adapter.svg" data-title="Adapter" style="height: 70vh;"></div>
+
+<p><br></p>
+<div style="text-align:center;">
+Autor: Altino Arthur, Márcio Henrique e Daniel de Sousa
+</div>
+
+<p><br></p>
 <p>Foco_2: Padrões de Projeto GoFs Estruturais.</p>
 <p>Entrega Mínima: 1 Padrão GoF Estrutural, com nível de modelagem e nível de implementação evidenciados (ou seja, código rodando e hospedado no repositório do projeto).</p>
 <p>Apresentação (para a professora) explicando o GoF Estrutural, com: (i) rastro claro aos membros participantes (MOSTRAR QUADRO DE PARTICIPAÇÕES &amp; COMMITS); (ii) justificativas &amp; senso crítico sobre o padrão GOF estrutural; e (iii) comentários gerais sobre o trabalho em equipe. Tempo da Apresentação: +/- 5min. Recomendação: Apresentar diretamente via Wiki ou GitPages do Projeto. Baixar os conteúdos com antecedência, evitando problemas de internet no momento de exposição nas Dinâmicas de Avaliação. Deve ser mostrado o GoF Estrutural em execução no dia da apresentação.</p>
 <p>A Wiki ou GitPages do Projeto deve conter um tópico dedicado ao Módulo Padrões de Projeto GoFs Estruturais, com 1 padrão GoF Estrutural (modelagem &amp; implementação, com código rodando), histórico de versões, referências, e demais detalhamentos gerados pela equipe nesse escopo.</p>
 <p>Demais orientações disponíveis nas Diretrizes (vide Moodle).</p>
+<h2 id="referencias">Referências</h2>
+<p>Arquitetura e Desenho de Software - AULA - GOFS ESTRUTURAIS - Profa. Milene Serrano - Material em Slides. SERRANO, Milene. Acesso em: 30 de maio de 2025.</p>
+<h2 id="historico-de-versoes">Histórico de Versões</h2>
+<table>
+<thead>
+<tr>
+<th style="text-align: center;">Versão</th>
+<th style="text-align: center;">Commit da Versão</th>
+<th style="text-align: center;">Data</th>
+<th style="text-align: center;">Descrição</th>
+<th style="text-align: center;">Autor(es)</th>
+<th style="text-align: center;">Revisor(es)</th>
+<th style="text-align: center;">Descrição da Revisão</th>
+<th style="text-align: center;">Commit da Revisão</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: center;">1.0</td>
+<td style="text-align: center;"><a href="https://github.com/">Ver Commit</a></td>
+<td style="text-align: center;">10/04/2025</td>
+<td style="text-align: center;">Adição do diagrama</td>
+<td style="text-align: center;"><a href="https://github.com/arthurrochamoreira">Altino Arthur</a>, <a href="https://github.com/DeM4rcio">Márcio Henrique</a> e <a href="https://github.com/daniel-de-sousa">Daniel de Sousa</a></td>
+<td style="text-align: center;"><a href="https://github.com/">Revisor</a></td>
+<td style="text-align: center;">—</td>
+<td style="text-align: center;">—</td>
+</tr>
+</tbody>
+</table>
 
 
 

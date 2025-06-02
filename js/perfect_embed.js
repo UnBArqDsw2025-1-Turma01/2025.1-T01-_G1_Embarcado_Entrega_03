@@ -184,7 +184,7 @@ class SvgZoomPan {
         // Evento de roda do mouse para zoom
         this.canvas.addEventListener("wheel", (e) => {
             e.preventDefault(); // Impede o scroll da página
-            const delta = e.deltaY > 0 ? -5 : 5; // Determina a direção do zoom
+            const delta = e.deltaY > 0 ? -25 : 25; // Determina a direção do zoom
             this.simulateZoom(delta);
         });
 

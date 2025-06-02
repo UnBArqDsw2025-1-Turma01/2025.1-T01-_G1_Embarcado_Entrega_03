@@ -507,6 +507,19 @@
         
       
       
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    3.1. Padrões de Projeto GoFs Criacionais
+    
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
       <a href="./" class="md-nav__link md-nav__link--active">
         
   
@@ -518,6 +531,52 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Índice">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Índice
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#padroes-criacionais-e-a-responsabilidade-de-instanciacao" class="md-nav__link">
+    <span class="md-ellipsis">
+      Padrões Criacionais e a Responsabilidade de Instanciação
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#referencias" class="md-nav__link">
+    <span class="md-ellipsis">
+      Referências
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#historico-de-versoes" class="md-nav__link">
+    <span class="md-ellipsis">
+      Histórico de Versões
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
       
     </li>
   
@@ -643,11 +702,103 @@
 
 
 <h1 id="31-modulo-padroes-de-projeto-gofs-criacionais">3.1. Módulo Padrões de Projeto GoFs Criacionais</h1>
+<h2 id="padroes-criacionais-e-a-responsabilidade-de-instanciacao">Padrões Criacionais e a Responsabilidade de Instanciação</h2>
+<p>Ao modelar um diagrama de classes, um dos desafios mais relevantes está em definir <strong>quem é responsável por instanciar os objetos</strong> e, em alguns casos, <strong>transferir essa responsabilidade</strong> de forma eficiente. Para isso, os padrões criacionais do <em>Gang of Four (GoF)</em> oferecem soluções reutilizáveis que favorecem um design mais flexível, desacoplado e de melhor desempenho. A seguir, apresentamos os principais padrões criacionais:</p>
+<ol>
+<li>
+<p><strong>Factory Method</strong>: Permite que subclasses decidam qual classe instanciar, delegando a responsabilidade de criação. Isso evita acoplamentos diretos e melhora a escalabilidade do sistema.</p>
+</li>
+<li>
+<p><strong>Abstract Factory</strong>: Foca na criação de famílias de objetos relacionados, promovendo consistência em estruturas com hierarquias complexas. Ideal para sistemas com múltiplas variações de objetos interdependentes.</p>
+</li>
+<li>
+<p><strong>Builder</strong>: Separa a construção de um objeto da sua representação final. Útil para criar objetos complexos com diferentes combinações de atributos, mantendo a clareza e reutilização do código.</p>
+</li>
+<li>
+<p><strong>Prototype</strong>: Cria novos objetos a partir da clonagem de um objeto existente. Ajuda a melhorar o desempenho em cenários onde a criação do zero é custosa, como em jogos ou simulações.</p>
+</li>
+<li>
+<p><strong>Singleton</strong>: Garante que apenas uma instância de uma classe exista, fornecendo um ponto de acesso global. Aplicado em contextos como configurações globais e gerenciadores de recursos.</p>
+</li>
+<li>
+<p><strong>Multiton</strong>: Variante do Singleton que permite múltiplas instâncias únicas, identificadas por chaves específicas. Indicado para sistemas que exigem um número controlado de instâncias distintas.</p>
+</li>
+<li>
+<p><strong>Object Pool</strong>: Gerencia um conjunto de objetos reutilizáveis, evitando o custo de criação e destruição contínua. Muito aplicado em jogos e sistemas que exigem alta performance com muitos objetos temporários.</p>
+</li>
+</ol>
+<hr />
+<p>Esses padrões são fundamentais para lidar com a complexidade da criação de objetos em sistemas orientados a objetos, tornando o software mais fácil de manter, evoluir e otimizar ao longo do tempo.</p>
+<hr />
+<p>Para a utilização do padrão Singleton, foi inicialmente considerada a possibilidade de instanciar múltiplos objetos da classe RegistradorLog, como nos serviços de monitoramento e análise de quedas. No entanto, essa abordagem foi descartada, pois poderia resultar em registros inconsistentes, duplicados ou até mesmo em conflitos de concorrência durante o processo de log.</p>
+<p>Com o Singleton, todos os eventos, sejam quedas detectadas, notificações enviadas ou erros internos seriam registrados por meio de uma única instância. Isso evitaria duplicações de log, inconsistências e problemas de concorrência que poderiam surgir caso diferentes partes do sistema tentassem gerenciar seus próprios registros de forma independente. Assim, qualquer componente do sistema que precisasse registrar um evento acessaria a instância única de RegistradorLog por meio do método estático getInstance(), garantindo a coesão do registro de eventos no sistema.</p>
+<hr />
+<p><br></p>
+<div class="svg-embed-container" data-svg-path="../../assets/singleton.svg" data-title="Singleton" style="height: 70vh;"></div>
+
+<p><br></p>
+<div style="text-align:center;">
+Autor: Altino Arthur, Márcio Henrique e Daniel de Sousa
+</div>
+
+<p><br></p>
+<hr />
+<p>Para a utilização do padrão Factory Method, foi inicialmente considerada a possibilidade de instanciar diretamente objetos da classe Notificacao (ou suas subclasses concretas, como NotificacaoSMS, NotificacaoEmail, etc.) em diversos pontos do sistema. No entanto, essa abordagem foi descartada, pois implicaria em um acoplamento forte entre o código cliente (que solicita a notificação) e as classes concretas de Notificacao. Isso tornaria o sistema rígido a mudanças, dificultando a introdução de novos tipos de notificação ou a modificação dos existentes, pois cada alteração exigiria modificações em múltiplos locais do código.</p>
+<p>Com o Factory Method, a criação de objetos Notificacao é centralizada e delegada à NotificacaoFactory e suas subclasses concretas, como a ConcreteFactory. Isso permite que o sistema crie diferentes tipos de notificações (por exemplo, NotificacaoSMS, NotificacaoEmail, NotificacaoApp) sem que o código cliente precise saber qual classe concreta está sendo instanciada. A ConcreteFactory encapsula a lógica de criação, decidindo qual tipo de Notificacao será produzido com base nos parâmetros fornecidos (tipo, prioridade, destinatário). Assim, qualquer componente do sistema que precise enviar uma notificação simplesmente "chama" o método criarNotificacao() da fábrica.</p>
+<hr />
+<p><br></p>
+<div class="svg-embed-container" data-svg-path="../../assets/fabric.svg" data-title="Factory Method" style="height: 70vh;"></div>
+
+<p><br></p>
+<div style="text-align:center;">
+Autor: Altino Arthur, Márcio Henrique e Daniel de Sousa
+</div>
+
+<p><br></p>
 <p>Foco_01: Padrões de Projeto GoFs Criacionais</p>
 <p>Entrega Mínima: 1 Padrão GoF Criacional, com nível de modelagem e nível de implementação evidenciados (ou seja, código rodando e hospedado no repositório do projeto).</p>
 <p>Apresentação (para a professora) explicando o GoF Criacional, com: (i) rastro claro aos membros participantes (MOSTRAR QUADRO DE PARTICIPAÇÕES &amp; COMMITS); (ii) justificativas &amp; senso crítico sobre o padrão GOF criacional, e (iii) comentários gerais sobre o trabalho em equipe. Tempo da Apresentação: +/- 5min. Recomendação: Apresentar diretamente via Wiki ou GitPages do Projeto. Baixar os conteúdos com antecedência, evitando problemas de internet no momento de exposição nas Dinâmicas de Avaliação. Deve ser mostrado o GoF Criacional em execução no dia da apresentação.</p>
 <p>A Wiki ou GitPages do Projeto deve conter um tópico dedicado ao Módulo Padrões de Projeto GoFs Criacionais, com 1 padrão GoF Criacional (modelagem &amp; implementação, com código rodando), histórico de versões, referências, e demais detalhamentos gerados pela equipe nesse escopo.</p>
 <p>Demais orientações disponíveis nas Diretrizes (vide Moodle).</p>
+<h2 id="referencias">Referências</h2>
+<p>REFACTORING GURU. Padrões de projeto criacionais. Disponível em: https://refactoring.guru/pt-br/design-patterns/creational-patterns. Acesso em: 30 de maio de 2025.</p>
+<h2 id="historico-de-versoes">Histórico de Versões</h2>
+<table>
+<thead>
+<tr>
+<th style="text-align: center;">Versão</th>
+<th style="text-align: center;">Commit da Versão</th>
+<th style="text-align: center;">Data</th>
+<th style="text-align: center;">Descrição</th>
+<th style="text-align: center;">Autor(es)</th>
+<th style="text-align: center;">Revisor(es)</th>
+<th style="text-align: center;">Descrição da Revisão</th>
+<th style="text-align: center;">Commit da Revisão</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: center;">1.0</td>
+<td style="text-align: center;"><a href="https://github.com/">Ver Commit</a></td>
+<td style="text-align: center;">10/04/2025</td>
+<td style="text-align: center;">Adição do diagrama</td>
+<td style="text-align: center;"><a href="https://github.com/arthurrochamoreira">Altino Arthur</a>, <a href="https://github.com/DeM4rcio">Márcio Henrique</a> e <a href="https://github.com/daniel-de-sousa">Daniel de Sousa</a></td>
+<td style="text-align: center;"><a href="https://github.com/">Revisor</a></td>
+<td style="text-align: center;">—</td>
+<td style="text-align: center;">—</td>
+</tr>
+<tr>
+<td style="text-align: center;">1.1</td>
+<td style="text-align: center;"><a href="https://github.com/">Ver Commit</a></td>
+<td style="text-align: center;">10/04/2025</td>
+<td style="text-align: center;">Adição do diagrama factory method</td>
+<td style="text-align: center;"><a href="https://github.com/arthurrochamoreira">Altino Arthur</a>, <a href="https://github.com/DeM4rcio">Márcio Henrique</a> e <a href="https://github.com/daniel-de-sousa">Daniel de Sousa</a></td>
+<td style="text-align: center;"><a href="https://github.com/">Revisor</a></td>
+<td style="text-align: center;">—</td>
+<td style="text-align: center;">—</td>
+</tr>
+</tbody>
+</table>
 
 
 
