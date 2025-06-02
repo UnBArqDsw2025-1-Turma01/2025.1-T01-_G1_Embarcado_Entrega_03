@@ -1,7 +1,8 @@
 package observer;
 
-import model.ResultadoAnalise;
-import service.Monitoramento;
+
+import model.*;
+import service.*;
 
 public class NotificadorCuidador implements ListenerQueda {
     @Override

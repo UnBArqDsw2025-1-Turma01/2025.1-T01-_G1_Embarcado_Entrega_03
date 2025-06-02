@@ -1,10 +1,7 @@
 package notification;
 
-import enums.Prioridade;
-import enums.StatusNotificacao;
-import enums.TipoAlerta;
-import model.PessoaCuidador;
-import model.ResultadoAnalise;
+import enums.*;
+import model.*;
 
 
 

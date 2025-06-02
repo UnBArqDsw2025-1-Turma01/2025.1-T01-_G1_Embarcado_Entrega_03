@@ -1,9 +1,7 @@
 package observer;
-import service.Monitoramento;
 
-import observer.NotificadorCuidador;
-
-import model.ResultadoAnalise;
+import model.*;
+import service.*;
 
 public interface ListenerQueda {
     void onQuedaDetectada(Monitoramento m, ResultadoAnalise r);
