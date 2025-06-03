@@ -561,12 +561,15 @@ class SvgEmbed {
         if (!svgPath) {
             rootElement.innerHTML = "<p style='color: red;'>Atributo data-svg-path não definido.</p>";
             console.error("Atributo 'data-svg-path' não encontrado no elemento raiz para SvgEmbed.");
+
             return;
         }
 
         try {
             const res = await fetch(svgPath);
+          
             if (!res.ok) throw new Error(`Erro ao carregar SVG: ${res.status} ${res.statusText}`);
+
             const text = await res.text();
             const parser = new DOMParser();
             const doc = parser.parseFromString(text, "image/svg+xml");
@@ -840,7 +843,6 @@ class ImageEmbed {
                 }
                 imageLastTouchDist = currentDist;
             }
-        }, { passive: false });
 
         imageCanvas.addEventListener("touchend", (e) => {
             imageIsPanning = false;
