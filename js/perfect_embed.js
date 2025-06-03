@@ -1,3 +1,7 @@
+// n'ao da pra dar zoom com a roda do mouse nas imagens que n'ao sao svg // --- MÓDULO SVG ZOOM/PAN ---
+/**
+ * Classe responsável por gerenciar o zoom e pan de um elemento SVG.
+ */
 class SvgZoomPan {
     /**
      * Construtor da classe SvgZoomPan.
@@ -349,7 +353,6 @@ class DownloadHandler {
                 const fileExtension = imagePath.split(".").pop() || "png"; // Fallback para png
                 a.download = fileName.replace(/\s/g, "_") + "." + fileExtension;
                 a.click();
-                URL.revokeObjectURL(url);
             };
         } else {
             console.warn(`Botão de download de imagem '${buttonId}' não encontrado.`);
@@ -561,15 +564,12 @@ class SvgEmbed {
         if (!svgPath) {
             rootElement.innerHTML = "<p style='color: red;'>Atributo data-svg-path não definido.</p>";
             console.error("Atributo 'data-svg-path' não encontrado no elemento raiz para SvgEmbed.");
-
             return;
         }
 
         try {
             const res = await fetch(svgPath);
-          
             if (!res.ok) throw new Error(`Erro ao carregar SVG: ${res.status} ${res.statusText}`);
-
             const text = await res.text();
             const parser = new DOMParser();
             const doc = parser.parseFromString(text, "image/svg+xml");
@@ -590,8 +590,8 @@ class SvgEmbed {
 
             const canvas = document.getElementById(`canvas-area-${uniqueSvgId}`);
             if (!canvas) {
-                console.error("Elemento 'canvas-area' não encontrado para o SVG após a injeção do HTML.");
-                return;
+                 console.error("Elemento 'canvas-area' não encontrado para o SVG após a injeção do HTML.");
+                 return;
             }
             canvas.appendChild(svg);
 
@@ -683,8 +683,6 @@ class ImageEmbed {
         img.style.willChange = "transform";
         img.style.transition = "transform 0.05s ease-out"; // Short transition for smoother zoom/pan feedback
 
-        img.draggable = false;
-
         const imageCanvas = document.getElementById(`canvas-area-${uniqueImageId}`);
         if (!imageCanvas) {
             console.error("Elemento com ID 'canvas-area' não encontrado após injeção de HTML.");
@@ -720,9 +718,29 @@ class ImageEmbed {
             });
         };
 
+        const clampImagePan = (imgElement, canvasElement, currentZoom, panX, panY) => {
+            const scaledWidth = imgElement.naturalWidth * (currentZoom / 100);
+            const scaledHeight = imgElement.naturalHeight * (currentZoom / 100);
+            const canvasRect = canvasElement.getBoundingClientRect();
+
+            let clampedPanX = panX;
+            let clampedPanY = panY;
+
+            // Pan limits are relative to the center of the canvas and the image
+            const maxAbsPanX = Math.max(0, (scaledWidth - canvasRect.width) / 2);
+            const maxAbsPanY = Math.max(0, (scaledHeight - canvasRect.height) / 2);
+            
+            clampedPanX = Math.max(-maxAbsPanX, Math.min(maxAbsPanX, panX));
+            clampedPanY = Math.max(-maxAbsPanY, Math.min(maxAbsPanY, panY));
+
+            return { x: clampedPanX, y: clampedPanY };
+        };
+
         this.updateImageTransform = (imgElement, canvasElement, currentZoom, panX, panY, id) => {
-            // No clamping applied here, panX and panY are used directly
-            imgElement.style.transform = `translate(${panX}px, ${panY}px) scale(${currentZoom / 100})`;
+            const clamped = clampImagePan(imgElement, canvasElement, currentZoom, panX, panY);
+            imagePanX = clamped.x;
+            imagePanY = clamped.y;
+            imgElement.style.transform = `translate(${imagePanX}px, ${imagePanY}px) scale(${currentZoom / 100})`;
             const zoomLabel = document.getElementById(`image-zoom-label-${id}`);
             if (zoomLabel) zoomLabel.textContent = `${Math.round(currentZoom)}%`; // Round for display
         };
@@ -803,7 +821,7 @@ class ImageEmbed {
             imagePanX += e.clientX - imageStartX;
             imagePanY += e.clientY - imageStartY;
             imageStartX = e.clientX;
-            imageStartY = e.clientY; // Corrigido: era e.startY
+            imageStartY = e.startY;
             scheduleImageUpdate();
         });
 
@@ -843,6 +861,7 @@ class ImageEmbed {
                 }
                 imageLastTouchDist = currentDist;
             }
+        }, { passive: false });
 
         imageCanvas.addEventListener("touchend", (e) => {
             imageIsPanning = false;
