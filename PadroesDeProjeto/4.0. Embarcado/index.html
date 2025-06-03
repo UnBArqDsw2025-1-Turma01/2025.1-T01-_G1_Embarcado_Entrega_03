@@ -1,0 +1,1364 @@
+
+<!doctype html>
+<html lang="pt" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+      
+        <link rel="prev" href="../3.5.2.DiagramaDeSequ%C3%AAncia/">
+      
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.14">
+    
+    
+      
+        <title>4.0. Embarcado com Padrões de Projeto - G1 Embarcados - Entrega 03</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.342714a4.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.06af60db.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto+Mono:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto Mono";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="deep-purple" data-md-color-accent="deep-orange">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#40-embarcado-com-padroes-de-projetos" class="md-skip">
+          Pular para conteúdo
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Cabeçalho">
+    <a href="../.." title="G1 Embarcados - Entrega 03" class="md-header__button md-logo" aria-label="G1 Embarcados - Entrega 03" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            G1 Embarcados - Entrega 03
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              4.0. Embarcado com Padrões de Projeto
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="deep-purple" data-md-color-accent="deep-orange"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-2.69L23.31 12 20 8.69V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="deep-purple" data-md-color-accent="deep-orange"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 2c-1.82 0-3.53.5-5 1.35C8 5.08 10 8.3 10 12s-2 6.92-5 8.65C6.47 21.5 8.18 22 10 22a10 10 0 0 0 10-10A10 10 0 0 0 10 2"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Buscar" placeholder="Buscar" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Pesquisar">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Limpar" aria-label="Limpar" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Inicializando busca
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/UnBArqDsw2025-1-Turma01/2025.1-T01-_G1_Embarcado_Entrega_03" title="Ir para repositório" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81"/></svg>
+  </div>
+  <div class="md-source__repository">
+    2025.1-T01-_G1_Embarcado_Entrega_03
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+    
+      
+<nav class="md-tabs" aria-label="Abas" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../.." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../Projeto/Projeto/" class="md-tabs__link">
+          
+  
+  
+  Projetos
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../3.PadroesDeProjeto/" class="md-tabs__link">
+          
+  
+  
+  Padrões de Projeto
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+    
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+  
+
+<nav class="md-nav md-nav--primary md-nav--lifted md-nav--integrated" aria-label="Navegação" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="G1 Embarcados - Entrega 03" class="md-nav__button md-logo" aria-label="G1 Embarcados - Entrega 03" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    G1 Embarcados - Entrega 03
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/UnBArqDsw2025-1-Turma01/2025.1-T01-_G1_Embarcado_Entrega_03" title="Ir para repositório" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81"/></svg>
+  </div>
+  <div class="md-source__repository">
+    2025.1-T01-_G1_Embarcado_Entrega_03
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Home
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    Projetos
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            Projetos
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../Projeto/Projeto/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Projeto
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    Padrões de Projeto
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            Padrões de Projeto
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../3.PadroesDeProjeto/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    3. Desenho de Software (Padrões de Projeto)
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../3.1.GoFsCriacionais/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    3.1. Padrões de Projeto GoFs Criacionais
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../3.2.GoFsEstruturais/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    3.2. Padrões de Projeto GoFs Estruturais
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../3.3.GoFsComportamentais/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    3.3. Padrões de Projeto GoFs Comportamentais
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../3.4.ParticipacoesPadroes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    3.4. Participações - Padrões de Projeto
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../3.5.IniciativasExtras/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    3.5. Iniciativas Extras - Padrões de Projeto
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../3.5.1.DiagramaDeAtividades/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    3.5.1. Iniciativas Extras - Diagrama de Atividades
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../3.5.2.DiagramaDeSequ%C3%AAncia/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    3.5.2. Iniciativas Extras - Diagrama de Sequência
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    4.0. Embarcado com Padrões de Projeto
+    
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    4.0. Embarcado com Padrões de Projeto
+    
+  </span>
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Índice">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Índice
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#introducao" class="md-nav__link">
+    <span class="md-ellipsis">
+      Introdução
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-escolha-estrategica-de-hardware" class="md-nav__link">
+    <span class="md-ellipsis">
+      2. Escolha Estratégica de Hardware
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-padroes-de-projeto-aplicados-ao-firmware" class="md-nav__link">
+    <span class="md-ellipsis">
+      3. Padrões de Projeto Aplicados ao Firmware
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3. Padrões de Projeto Aplicados ao Firmware">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#31-builder" class="md-nav__link">
+    <span class="md-ellipsis">
+      3.1. Builder
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3.1. Builder">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#311-explicacao-do-padrao-builder" class="md-nav__link">
+    <span class="md-ellipsis">
+      3.1.1. Explicação do Padrão Builder
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#312-aplicacao-do-builder-no-projeto" class="md-nav__link">
+    <span class="md-ellipsis">
+      3.1.2. Aplicação do Builder no Projeto
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#32-singleton" class="md-nav__link">
+    <span class="md-ellipsis">
+      3.2. Singleton
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3.2. Singleton">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#321-explicacao-do-padrao-singleton" class="md-nav__link">
+    <span class="md-ellipsis">
+      3.2.1. Explicação do Padrão Singleton
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#322-aplicacao-do-singleton-no-projeto" class="md-nav__link">
+    <span class="md-ellipsis">
+      3.2.2. Aplicação do Singleton no Projeto
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#33-facade" class="md-nav__link">
+    <span class="md-ellipsis">
+      3.3 Facade
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3.3 Facade">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#331-explicacao-do-padrao-facade" class="md-nav__link">
+    <span class="md-ellipsis">
+      3.3.1. Explicação do Padrão Facade
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#332-aplicacao-do-facade-no-projeto" class="md-nav__link">
+    <span class="md-ellipsis">
+      3.3.2. Aplicação do Facade no Projeto
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#demostracao" class="md-nav__link">
+    <span class="md-ellipsis">
+      Demostração
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#implementacoes-das-classes" class="md-nav__link">
+    <span class="md-ellipsis">
+      Implementações das Classes
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#referencias" class="md-nav__link">
+    <span class="md-ellipsis">
+      Referências
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#historico-de-versoes" class="md-nav__link">
+    <span class="md-ellipsis">
+      Histórico de Versões
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="40-embarcado-com-padroes-de-projetos">4.0. Embarcado com Padrões de Projetos</h1>
+<h2 id="introducao">Introdução</h2>
+<p>O desenvolvimento de sistemas embarcados, como o proposto neste projeto, transcende a mera seleção de componentes de hardware. A arquitetura do software embarcado (firmware) desempenha um papel crucial na robustez, manutenibilidade e escalabilidade da solução. Neste contexto, a aplicação de Padrões de Projeto de Software torna-se uma prática valiosa, mesmo em ambientes com recursos limitados.</p>
+<p>Este capítulo detalha a abordagem adotada para integrar Padrões de Projeto no desenvolvimento do firmware para o microcontrolador ESP32-C3, focado na coleta de dados do sensor MPU6050. A simulação através da plataforma Wokwi foi instrumental, permitindo o design, implementação e teste iterativo do hardware virtualizado e do código associado, facilitando a aplicação efetiva dos padrões discutidos a seguir.</p>
+<h2 id="2-escolha-estrategica-de-hardware">2. Escolha Estratégica de Hardware</h2>
+<p>A fundação de um sistema embarcado eficiente reside na seleção criteriosa de seus componentes. Para este projeto, a escolha foi guiada pela necessidade de conectividade, capacidade de processamento adequada, eficiência energética e viabilidade de simulação.</p>
+<ul>
+<li>
+<p><strong>Microcontrolador ESP32-C3:</strong> Optou-se pelo ESP32-C3 da Espressif Systems devido ao seu excelente balanço entre custo e benefício. Seu núcleo RISC-V de 32 bits, conectividade Wi-Fi e Bluetooth LE 5.0 integrados, e foco em baixo consumo energético o tornam ideal para aplicações IoT. A disponibilidade de ferramentas de desenvolvimento robustas, como o ESP-IDF e o suporte no Arduino IDE, além da sua presença no simulador Wokwi, foram fatores decisivos.</p>
+</li>
+<li>
+<p><strong>Sensor MPU6050:</strong> Este sensor combina um acelerômetro e um giroscópio de 3 eixos (6-DOF), comunicando-se via I2C. Sua popularidade, baixo custo, disponibilidade de bibliotecas e a capacidade de simulação no Wokwi o tornaram uma escolha natural para o projeto.</p>
+</li>
+</ul>
+<p>A imagem abaixo demostra a conexão do Hardware.</p>
+<p><br></p>
+<div class="image-embed-container" data-image-path="../../assets/hardware.png" data-title="Strategy" style="height: 70vh;"></div>
+
+<p><br></p>
+<div style="text-align:center;">
+Autores: Altino Arthur, Márcio Henrique e Daniel de Sousa
+</div>
+
+<h2 id="3-padroes-de-projeto-aplicados-ao-firmware">3. Padrões de Projeto Aplicados ao Firmware</h2>
+<p>Para estruturar o firmware do ESP32-C3 de forma organizada, flexível e de fácil manutenção, foram considerados e aplicados os seguintes padrões de projeto:</p>
+<h3 id="31-builder">3.1. Builder</h3>
+<h4 id="311-explicacao-do-padrao-builder">3.1.1. Explicação do Padrão Builder</h4>
+<p>O padrão <strong>Builder</strong> é um padrão de projeto criacional que visa separar a construção de um objeto complexo de sua representação, permitindo que o mesmo processo de construção possa criar diferentes representações. Ele é particularmente útil quando um objeto pode ter múltiplas configurações opcionais ou quando o processo de criação do objeto é composto por várias etapas. Em vez de utilizar construtores com uma longa lista de parâmetros (muitos dos quais podem ser opcionais), o Builder permite definir esses parâmetros passo a passo de forma fluida e legível, culminando na construção do objeto final. Isso melhora a clareza do código, facilita a criação de objetos com configurações variadas e evita o problema dos "construtores telescópicos".</p>
+<p><strong>Principais Benefícios:</strong></p>
+<ul>
+<li>Permite variar a representação interna do produto.</li>
+<li>Encapsula o código de construção e representação.</li>
+<li>Fornece controle mais preciso sobre o processo de construção.</li>
+<li>Melhora a legibilidade ao criar objetos complexos.</li>
+</ul>
+<h4 id="312-aplicacao-do-builder-no-projeto">3.1.2. Aplicação do Builder no Projeto</h4>
+<p>Esse padrão foi aplicado levando em conta a necessidade de gerar diferentes tipos de mensagens para o sistema de monitoramento: <code>UpdateMessage</code> (para atualizações periódicas de medições), <code>StatusMessage</code> (para informar o estado operacional do sistema) e <code>AlertMessage</code> (para notificar eventos críticos, como uma queda detectada). Todas essas mensagens compartilham uma estrutura base, mas diferem em seu conteúdo específico (payload).</p>
+<p>Com isso, foram definidos os seguintes componentes para a implementação do padrão Builder:</p>
+<p><strong>Produto Abstrato (<code>BaseMessage.h</code>):</strong>
+Define a interface comum para todas as mensagens. Inclui atributos como <code>timestamp</code> e <code>messageType</code>, e um método virtual <code>getFormattedMessage()</code> que delega a formatação do conteúdo específico para um método virtual puro <code>getPayloadDetails()</code>.</p>
+<pre><code class="language-cpp">// Trecho de BaseMessage.h
+#ifndef BASEMESSAGE_H
+#define BASEMESSAGE_H
+
+#include &lt;string&gt;
+#include &lt;memory&gt;
+#include &lt;Arduino.h&gt;
+
+class BaseMessage {
+public:
+    unsigned long timestamp;
+    std::string messageType;
+
+    BaseMessage(std::string type) : timestamp(millis()), messageType(std::move(type)) {}
+    virtual ~BaseMessage() = default;
+
+    virtual std::string getFormattedMessage() const {
+        std::string formattedMsg = &quot;\n╔══════════════════════════════════════════════════════════╗\n&quot;;
+        formattedMsg += &quot;\r║ Tipo      : &quot; + messageType + &quot;\r\n&quot;;
+        // ... (formatação do timestamp) ...
+        formattedMsg += &quot;║ Payload   :\r\n&quot; + getPayloadDetails();
+        formattedMsg += &quot;\r\n╚══════════════════════════════════════════════════════════╝\n&quot;;
+        return formattedMsg;
+    }
+
+protected:
+    virtual std::string getPayloadDetails() const = 0;
+};
+#endif // BASEMESSAGE_H
+</code></pre>
+<p></br></p>
+<p><strong>Produtos Concretos (<code>AlertMessage.h</code>, <code>UpdateMessage.h</code>, <code>StatusMessage.h</code>):</strong>
+São as classes que herdam de <code>BaseMessage</code> e implementam <code>getPayloadDetails()</code> para fornecer seu conteúdo específico. Por exemplo, <code>AlertMessage</code> armazena os dados do sensor no momento do alerta e uma razão.</p>
+<pre><code class="language-cpp">// Trecho de AlertMessage.h
+#ifndef ALERTMESSAGE_H
+#define ALERTMESSAGE_H
+
+#include &quot;BaseMessage.h&quot;
+#include &quot;Singleton/Sensor.h&quot; // Assumindo que Sensor.h está em um subdiretório Singleton
+#include &lt;Arduino.h&gt;
+
+class AlertMessage : public BaseMessage {
+public:
+    Sensor::SensorData criticalSensorData;
+    std::string reason;
+
+    AlertMessage() : BaseMessage(&quot;ALERTA_QUEDA&quot;) {}
+
+protected:
+    std::string getPayloadDetails() const override {
+        char buffer[500];
+        snprintf(buffer, sizeof(buffer),
+            &quot;║  ================ [ ALERTA ] ================\r\n&quot;
+            &quot;║  Motivo                  : %s\r\n&quot;
+            // ... (restante da formatação) ...
+            , reason.c_str(), criticalSensorData.ax_g /* ... etc ... */);
+        return buffer;
+    }
+};
+#endif // ALERTMESSAGE_H
+</code></pre>
+<p><strong>Builder Abstrato (<code>MessageBuilder.h</code>):</strong>
+Define a interface para criar as partes do objeto <code>BaseMessage</code>. Possui métodos virtuais puros como <code>reset()</code>, <code>buildSpecificProductParts()</code> e <code>getProduct()</code>. O método <code>buildTimestamp()</code> foi incluído na interface, mas como o timestamp é tratado no construtor de <code>BaseMessage</code>, sua implementação nos builders concretos é vazia.</p>
+<pre><code class="language-cpp">// Trecho de MessageBuilder.h
+#ifndef MESSAGE_BUILDER_H
+#define MESSAGE_BUILDER_H
+
+#include &lt;memory&gt;
+#include &quot;BaseMessage.h&quot;
+#include &quot;Singleton/Sensor.h&quot; // Assumindo que Sensor.h está em um subdiretório Singleton
+
+class MessageBuilder {
+public:
+    virtual ~MessageBuilder() = default;
+    virtual void reset() = 0;
+    virtual void buildTimestamp() = 0;
+    virtual void buildSpecificProductParts(const Sensor::SensorData&amp; data) = 0;
+    virtual std::unique_ptr&lt;BaseMessage&gt; getProduct() = 0;
+};
+// ... (definições dos Builders Concretos abaixo) ...
+#endif // MESSAGE_BUILDER_H
+</code></pre>
+<p><strong>Builders Concretos (<code>AlertMessageBuilder</code>, <code>UpdateMessageBuilder</code>, <code>StatusMessageBuilder</code> em <code>MessageBuilder.h</code>):</strong>
+Implementam a interface <code>MessageBuilder</code> para construir um tipo específico de mensagem. Cada builder é responsável por instanciar seu produto (e.g., <code>AlertMessage</code>) e preencher seus campos específicos através do método <code>buildSpecificProductParts()</code>.</p>
+<pre><code class="language-cpp">// Trecho de MessageBuilder.h - Exemplo com AlertMessageBuilder
+#include &quot;AlertMessage.h&quot; // E outros produtos concretos
+
+class AlertMessageBuilder : public MessageBuilder {
+private:
+    std::unique_ptr&lt;AlertMessage&gt; product;
+public:
+    void reset() override { product = std::make_unique&lt;AlertMessage&gt;(); }
+    void buildTimestamp() override { /* Timestamp tratado em BaseMessage */ }
+    void buildSpecificProductParts(const Sensor::SensorData&amp; data) override {
+        if (!product) reset();
+        product-&gt;criticalSensorData = data;
+        product-&gt;reason = &quot;Valores de aceleracao anomalos&quot;;
+    }
+    std::unique_ptr&lt;BaseMessage&gt; getProduct() override { return std::move(product); }
+};
+</code></pre>
+<p><strong>Director (<code>MessageDirector.h</code>):</strong>
+Orquestra o processo de construção utilizando um objeto <code>MessageBuilder</code> fornecido. O método <code>constructMessage()</code> do <code>MessageDirector</code> chama sequencialmente os passos de construção (<code>reset</code>, <code>buildTimestamp</code>, <code>buildSpecificProductParts</code>) no builder configurado e, por fim, obtém o produto final.</p>
+<pre><code class="language-cpp">// Trecho de MessageDirector.h
+#ifndef MESSAGE_DIRECTOR_H
+#define MESSAGE_DIRECTOR_H
+
+#include &quot;MessageBuilder.h&quot;
+#include &quot;Singleton/Sensor.h&quot; // Assumindo que Sensor.h está em um subdiretório Singleton
+
+class MessageDirector {
+private:
+    MessageBuilder* builder_ = nullptr;
+public:
+    void setBuilder(MessageBuilder* builder) { this-&gt;builder_ = builder; }
+    std::unique_ptr&lt;BaseMessage&gt; constructMessage(const Sensor::SensorData&amp; data) {
+        if (!builder_) {
+            if (Serial) { Serial.println(&quot;ERRO: Builder nao configurado no Director!&quot;); }
+            return nullptr;
+        }
+        builder_-&gt;reset();
+        builder_-&gt;buildTimestamp(); // Chamada mantida por conformidade com a interface
+        builder_-&gt;buildSpecificProductParts(data);
+        return builder_-&gt;getProduct();
+    }
+};
+#endif // MESSAGE_DIRECTOR_H
+</code></pre>
+<p>Esta estrutura permite que o sistema crie diferentes tipos de mensagens de forma flexível e desacoplada. O <code>MessageDirector</code> padroniza o processo de construção, enquanto os <code>ConcreteBuilder</code>s encapsulam a lógica específica de cada tipo de mensagem. A criação efetiva das mensagens é simplificada pelo uso do padrão Facade, como será visto adiante.</p>
+<h3 id="32-singleton">3.2. Singleton</h3>
+<h4 id="321-explicacao-do-padrao-singleton">3.2.1. Explicação do Padrão Singleton</h4>
+<p>O padrão <strong>Singleton</strong> é um padrão de projeto criacional que garante que uma classe tenha apenas uma única instância em todo o sistema e fornece um ponto de acesso global a essa instância. É frequentemente utilizado para gerenciar recursos compartilhados, como conexões de banco de dados, gerenciadores de logging, configurações de aplicação ou drivers de hardware que não devem ser instanciados múltiplas vezes. Ao restringir a instanciação, o Singleton evita o uso inconsistente ou conflituoso de um recurso global.</p>
+<p><strong>Principais Benefícios:</strong></p>
+<ul>
+<li>Garante uma única instância de uma classe.</li>
+<li>Fornece um ponto de acesso global a essa instância.</li>
+<li>Pode ser inicializado de forma tardia (lazy initialization).</li>
+<li>Controla o acesso concorrente à instância única (importante em ambientes multithread).</li>
+</ul>
+<h4 id="322-aplicacao-do-singleton-no-projeto">3.2.2. Aplicação do Singleton no Projeto</h4>
+<p>No projeto, o padrão Singleton é aplicado à classe <code>Sensor</code>, que encapsula a lógica de interação com o sensor MPU6050. Esta abordagem garante que exista apenas uma instância controlando e acessando o hardware do sensor MPU6050 em todo o sistema, prevenindo múltiplas inicializações ou acessos conflitantes ao mesmo recurso físico.</p>
+<p>Os componentes da implementação do Singleton na classe <code>Sensor</code> são:</p>
+<p><strong>Ponteiro Estático Privado para a Instância:</strong>
+A classe <code>Sensor</code> declara um ponteiro estático privado <code>instance</code> para si mesma. Este ponteiro armazenará o endereço da única instância da classe.</p>
+<pre><code class="language-cpp">// Trecho de Sensor.h
+private:
+    static Sensor* instance;
+</code></pre>
+<p>A inicialização deste ponteiro é feita no ficheiro <code>.cpp</code>:</p>
+<pre><code class="language-cpp">// Trecho de Sensor.cpp
+Sensor* Sensor::instance = nullptr;
+</code></pre>
+<p><strong>Construtor Privado:</strong>
+O construtor da classe <code>Sensor</code> é declarado como <code>private</code>. Isso impede que objetos <code>Sensor</code> sejam criados através do operador <code>new</code> de fora da própria classe, garantindo que a instanciação seja controlada internamente.</p>
+<pre><code class="language-cpp">// Trecho de Sensor.h
+private:
+    Sensor(int sda, int scl); // Construtor privado
+</code></pre>
+<p><strong>Método Estático Público <code>getInstance()</code>:</strong>
+Um método público estático <code>getInstance()</code> serve como o único ponto de acesso para obter a instância da classe <code>Sensor</code>. Na primeira vez que este método é chamado, ele cria a instância (se ainda não existir) e a armazena no ponteiro estático <code>instance</code>. Em chamadas subsequentes, ele simplesmente retorna o ponteiro para a instância já existente. Os pinos SDA e SCL para a comunicação I2C são passados como parâmetros na primeira chamada para configurar o sensor.</p>
+<pre><code class="language-cpp">// Trecho de Sensor.h
+public:
+    static Sensor* getInstance(int sda_pin = 21, int scl_pin = 22); // Valores padrão para ESP32 comum
+
+// Trecho de Sensor.cpp
+Sensor* Sensor::getInstance(int sda_pin, int scl_pin) {
+    if (instance == nullptr) {
+        instance = new Sensor(sda_pin, scl_pin);
+    }
+    return instance;
+    }
+</code></pre>
+<p>No <code>main.cpp</code>, os pinos <code>SDA_PIN</code> (8) e <code>SCL_PIN</code> (9) são usados, adequados para o ESP32-C3 no Wokwi.</p>
+<p><strong>Prevenção de Cópia e Atribuição:</strong>
+Para garantir estritamente a unicidade da instância, o construtor de cópia e o operador de atribuição de cópia são deletados.</p>
+<pre><code class="language-cpp">// Trecho de Sensor.h
+private:
+    // Previne cópia
+    Sensor(const Sensor&amp;) = delete;
+    Sensor&amp; operator=(const Sensor&amp;) = delete;
+</code></pre>
+<p>Com esta implementação, qualquer parte do sistema que precise interagir com o sensor MPU6050 (para inicializá-lo ou ler dados) o fará através da chamada <code>Sensor::getInstance()</code>, garantindo o acesso à mesma e única instância do objeto <code>Sensor</code>. Isto é demonstrado no <code>main.cpp</code>:</p>
+<pre><code class="language-cpp">// Trecho de main.cpp (setup)
+Sensor* sensorInstance = Sensor::getInstance(SDA_PIN, SCL_PIN);
+if (sensorInstance == nullptr || !sensorInstance-&gt;init()) {
+    // ... tratamento de erro ...
+}
+
+// Trecho de main.cpp (loop)
+Sensor* sensor = Sensor::getInstance(); // Não precisa passar os pinos novamente
+if (!sensor || !sensor-&gt;isInitialized()) {
+    // ... tratamento de erro ...
+}
+sensor-&gt;readSensorData();
+Sensor::SensorData data = sensor-&gt;getSensorData();
+</code></pre>
+<h3 id="33-facade">3.3 Facade</h3>
+<h4 id="331-explicacao-do-padrao-facade">3.3.1. Explicação do Padrão Facade</h4>
+<p>O padrão <strong>Facade</strong> é um padrão de projeto estrutural que fornece uma interface unificada e simplificada para um conjunto de interfaces em um subsistema mais complexo. A Facade define uma interface de nível mais alto que torna o subsistema mais fácil de usar, ocultando suas complexidades internas. Ele promove o baixo acoplamento entre o cliente e o subsistema, pois o cliente interage apenas com a Facade, e não diretamente com os múltiplos componentes do subsistema.</p>
+<p><strong>Principais Benefícios:</strong>
+    * Simplifica o uso de subsistemas complexos.
+    * Desacopla o cliente das classes internas do subsistema.
+    * Fornece um ponto de entrada único para a funcionalidade do subsistema.
+    * Pode ajudar a organizar um sistema em camadas</p>
+<h3 id="332-aplicacao-do-facade-no-projeto">3.3.2. Aplicação do Facade no Projeto</h3>
+<p>No projeto, a classe <code>MessageFacade</code> atua como uma fachada para o subsistema de criação de mensagens. Este subsistema, como detalhado na seção do padrão <code>Builder</code>, envolve o <code>MessageDirector</code> e múltiplos <code>MessageBuilders</code> concretos (<code>AlertMessageBuilder</code>, <code>UpdateMessageBuilder</code>, <code>StatusMessageBuilder</code>). A <code>MessageFacade</code> simplifica a interação com este subsistema, fornecendo uma interface de alto nível para o cliente (o ficheiro <code>main.cpp</code>).</p>
+<p>A implementação da MessageFacade consiste em:</p>
+<p><strong>Encapsulamento do Subsistema</strong>:
+A <code>MessageFacade</code> possui instâncias internas do <code>MessageDirector</code> e de todos os <code>MessageBuilders</code> concretos necessários. Estes componentes são a complexidade que a fachada visa ocultar.</p>
+<pre><code class="language-cpp">// Trecho de MessageFacade.h
+#ifndef MESSAGE_FACADE_H
+#define MESSAGE_FACADE_H
+
+#include &lt;memory&gt; // Para std::unique_ptr
+#include &quot;Builder/MessageDirector.h&quot;
+#include &quot;Builder/MessageBuilder.h&quot;
+#include &quot;Builder/BaseMessage.h&quot;
+#include &quot;Singleton/Sensor.h&quot; // Assumindo que Sensor.h está em um subdiretório Singleton
+
+class MessageFacade {
+private:
+    // A Facade possui as instâncias do Director e dos Builders
+    MessageDirector director_;
+    AlertMessageBuilder alertBuilder_;
+    UpdateMessageBuilder updateBuilder_;
+    StatusMessageBuilder statusBuilder_;
+
+public:
+    MessageFacade() {
+        // Construtor pode ser usado para inicializações, se necessário
+    }
+    // ... (métodos da facade abaixo) ...
+};
+#endif // MESSAGE_FACADE_H
+</code></pre>
+<p><strong>Interface Simplificada</strong>:
+A <code>MessageFacade</code> expõe métodos públicos simples para cada tipo de mensagem que o cliente pode precisar criar. Por exemplo,  <code>createAlertMessage(const Sensor::SensorData&amp; data)</code> lida internamente com a configuração do <code>MessageDirector</code> para usar o <code>AlertMessageBuilder</code> e orquestra a construção da mensagem de alerta.</p>
+<pre><code class="language-cpp">// Trecho de MessageFacade.h (continuação)
+public:
+// Método para criar uma mensagem de alerta
+std::unique_ptr&lt;BaseMessage&gt; createAlertMessage(const Sensor::SensorData&amp; data) {
+    director_.setBuilder(&amp;alertBuilder_);
+    return director_.constructMessage(data);
+}
+
+// Método para criar uma mensagem de atualização
+std::unique_ptr&lt;BaseMessage&gt; createUpdateMessage(const Sensor::SensorData&amp; data) {
+    director_.setBuilder(&amp;updateBuilder_);
+    return director_.constructMessage(data);
+}
+
+// Método para criar uma mensagem de status
+std::unique_ptr&lt;BaseMessage&gt; createStatusMessage(const Sensor::SensorData&amp; data) {
+    director_.setBuilder(&amp;statusBuilder_);
+    return director_.constructMessage(data);
+}
+</code></pre>
+<p><strong>Uso pelo Cliente (main.cpp)</strong>:
+O código cliente (<code>main.cpp</code>) interage apenas com a <code>MessageFacade</code> para criar os diferentes tipos de mensagens. Ele não precisa conhecer os detalhes internos do <code>MessageDirector</code> ou dos <code>MessageBuilders</code> específicos. Uma instância global da <code>MessageFacade</code> é criada para facilitar o acesso.</p>
+<pre><code class="language-cpp">// Trecho de main.cpp
+#include &quot;Facade/MessageFacade.h&quot; // Assumindo que MessageFacade.h está em um subdiretório Facade
+
+// --- Instância Global da Facade ---
+MessageFacade messageFacade;
+
+// ... Dentro da função loop() ...
+void loop() {
+    Sensor* sensor = Sensor::getInstance();
+    // ... (leitura do sensor e lógica de detecção de queda) ...
+    Sensor::SensorData data = sensor-&gt;getSensorData();
+
+    if (quedaDetectada) {
+        Serial.println(&quot;\n\r[EVENTO] Queda detectada! Construindo mensagem de ALERTA...&quot;);
+        std::unique_ptr&lt;BaseMessage&gt; alertMsg = messageFacade.createAlertMessage(data);
+        displayMessage(alertMsg);
+        delay(2000);
+    }
+
+    // ... (lógica para mensagens de atualização e status usando messageFacade) ...
+    if (currentTime - lastUpdateTime &gt; 5000) {
+        Serial.println(&quot;\n\r[INFO] Construindo mensagem de ATUALIZACAO DE MEDICOES...&quot;);
+        std::unique_ptr&lt;BaseMessage&gt; updateMsg = messageFacade.createUpdateMessage(data);
+        displayMessage(updateMsg);
+        lastUpdateTime = currentTime;
+    }
+}
+</code></pre>
+<p>A <code>MessageFacade</code> efetivamente simplifica a interface para o cliente, promove o baixo acoplamento e torna o subsistema de criação de mensagens mais fácil de usar e manter.</p>
+<h2 id="demostracao">Demostração</h2>
+<p>O vídeo abaixo mostra o código rodando na prática no ambiente de simulação Wokwi, demonstrando a inicialização do sensor, a leitura dos dados e a geração das diferentes mensagens (Alerta, Atualização, Status) conforme os eventos ocorrem.</p>
+<iframe src="https://unbbr.sharepoint.com/sites/Gravao198/_layouts/15/embed.aspx?UniqueId=8976db54-5458-4240-b025-66d8e0515137&embed=%7B%22hvm%22%3Atrue%2C%22ust%22%3Atrue%7D&referrer=StreamWebApp&referrerScenario=EmbedDialog.Create" width="750" height="460" frameborder="0" scrolling="no" allowfullscreen title="Meeting in _General_-20250602_213807-Meeting Recording.mp4"></iframe>
+
+<h2 id="implementacoes-das-classes">Implementações das Classes</h2>
+<p>As implementações completas das classes mencionadas neste documento podem ser conferidas no repositório oficial do projeto, disponível em:</p>
+<p><a href="https://github.com/UnBArqDsw2025-1-Turma01/2025.1-T01-_G1_Embarcado_Entrega_03/tree/main/src/monitora">https://github.com/UnBArqDsw2025-1-Turma01/2025.1-T01-_G1_Embarcado_Entrega_03/tree/main/src/monitora</a></p>
+<p>O diretório <code>src/monitora</code> contém o código-fonte Java estruturado em pacotes.</p>
+<h2 id="referencias">Referências</h2>
+<p>REFACTORING GURU. Padrões de projeto comportamentais. Disponível em: https://refactoring.guru/pt-br/design-patterns/behavioral-patterns. Acesso em: 30 de maio de 2025.</p>
+<h2 id="historico-de-versoes">Histórico de Versões</h2>
+<table>
+<thead>
+<tr>
+<th style="text-align: center;">Versão</th>
+<th style="text-align: center;">Commit da Versão</th>
+<th style="text-align: center;">Data</th>
+<th style="text-align: center;">Descrição</th>
+<th style="text-align: center;">Autor(es)</th>
+<th style="text-align: center;">Revisor(es)</th>
+<th style="text-align: center;">Descrição da Revisão</th>
+<th style="text-align: center;">Commit da Revisão</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: center;">1.0</td>
+<td style="text-align: center;"><a href="https://github.com/UnBArqDsw2025-1-Turma01/2025.1-T01-_G1_Embarcado_Entrega_03/commit/5cb51fb894c7a72436e83b65cc56450e1908c811">Ver Commit</a></td>
+<td style="text-align: center;">02/06/2025</td>
+<td style="text-align: center;">Adição de Padrões de Projeto Aplicado no Código do Hardware</td>
+<td style="text-align: center;"><a href="https://github.com/arthurrochamoreira">Altino Arthur</a>, <a href="https://github.com/DeM4rcio">Márcio Henrique</a> e <a href="https://github.com/daniel-de-sousa">Daniel de Sousa</a></td>
+<td style="text-align: center;"><a href="https://github.com/">Revisor</a></td>
+<td style="text-align: center;">—</td>
+<td style="text-align: center;">—</td>
+</tr>
+</tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Voltar para o topo
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="Rodapé" >
+        
+          
+          <a href="../3.5.2.DiagramaDeSequ%C3%AAncia/" class="md-footer__link md-footer__link--prev" aria-label="Anterior: 3.5.2. Iniciativas Extras - Diagrama de Sequência">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Anterior
+              </span>
+              <div class="md-ellipsis">
+                3.5.2. Iniciativas Extras - Diagrama de Sequência
+              </div>
+            </div>
+          </a>
+        
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.instant", "navigation.tracking", "navigation.tabs", "navigation.tabs.sticky", "navigation.top", "navigation.footer", "navigation.sections", "navigation.expand", "toc.integrate", "search.suggest", "search.highlight", "content.code.annotate", "content.code.copy", "header.autohide", "announce.dismiss"], "search": "../../assets/javascripts/workers/search.d50fe291.min.js", "tags": null, "translations": {"clipboard.copied": "Copiado para \u00e1rea de transfer\u00eancia", "clipboard.copy": "Copiar para \u00e1rea de transfer\u00eancia", "search.result.more.one": "mais 1 nesta p\u00e1gina", "search.result.more.other": "# mais nesta p\u00e1gina", "search.result.none": "Nenhum documento encontrado", "search.result.one": "1 documento encontrado", "search.result.other": "# documentos encontrados", "search.result.placeholder": "Digite para iniciar a busca", "search.result.term.missing": "Ausente", "select.version": "Selecione a vers\u00e3o"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.13a4f30d.min.js"></script>
+      
+        <script src="../../js/perfect_embed.js"></script>
+      
+    
+  </body>
+</html>
