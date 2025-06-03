@@ -955,10 +955,7 @@
 <li><strong>EstrategiaPush</strong>: envia alertas do tipo push diretamente para dispositivos móveis.</li>
 </ul>
 <p>Todas essas classes implementam a interface <code>IEnvio</code> e, assim, podem ser utilizadas de maneira intercambiável pelo sistema. Dessa forma, o padrão Strategy permitiu não apenas reduzir o acoplamento entre componentes, mas também viabilizou a possibilidade de extensão do sistema com novas formas de envio, sem necessidade de modificar as classes existentes.</p>
-<p><br></p>
-<div class="image-embed-container" data-image-path="../../assets/strategy.png" data-title="Strategy" style="height: 70vh;"></div>
-
-<p><br></p>
+<p><img alt="Strategy" src="../../assets/strategy.png" /></p>
 <div style="text-align:center;">
 Autores: Altino Arthur, Márcio Henrique e Daniel de Sousa
 </div>
@@ -1063,10 +1060,7 @@ Autores: Altino Arthur, Márcio Henrique e Daniel de Sousa
 </div>
 
 <h2 id="resultados-dos-testes-strategy">Resultados dos Testes Strategy</h2>
-<p><br></p>
-<div class="image-embed-container" data-image-path="../../assets/test_strategy.png" data-title="Strategy" style="height: 70vh;"></div>
-
-<p><br></p>
+<p><img alt="Testes Strategy" src="../../assets/test_strategy.png" /></p>
 <div style="text-align:center;">
 Autores: Altino Arthur, Márcio Henrique e Daniel de Sousa
 </div>
@@ -1095,10 +1089,7 @@ Autores: Altino Arthur, Márcio Henrique e Daniel de Sousa
 <li><strong>Facilidade de manutenção</strong>, já que novas funcionalidades podem ser integradas com mínimo impacto no sistema.</li>
 </ul>
 <p>Caso haja a necessidade futura de incorporar novos comportamentos em resposta a eventos de queda (como acionar um alarme local ou alimentar um painel estatístico), basta implementar uma nova classe que estenda <code>ListenerQueda</code> e registrá-la no <code>ServicoMonitoramento</code>. Nenhuma alteração será necessária nas classes já existentes, garantindo uma evolução sustentável do código.</p>
-<p><br></p>
-<div class="image-embed-container" data-image-path="../../assets/observer.png" data-title="Observer" style="height: 70vh;"></div>
-
-<p><br></p>
+<p><img alt="Observer" src="../../assets/observer.png" /></p>
 <h2 id="implementacao-em-codigo-observadores">Implementação em código - Observadores</h2>
 <pre><code class="language-java">public interface ListenerQueda {
     void onQuedaDetectada(Monitoramento m, ResultadoAnalise r);
