@@ -599,6 +599,15 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#implementacao-em-codigo-factory-method" class="md-nav__link">
+    <span class="md-ellipsis">
+      Implementação em código - Factory Method
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#implementacoes-das-classes" class="md-nav__link">
     <span class="md-ellipsis">
       Implementações das Classes
@@ -884,6 +893,59 @@ Autores: Altino Arthur, Márcio Henrique e Daniel de Sousa
 </div>
 
 <p><br></p>
+<h2 id="implementacao-em-codigo-factory-method">Implementação em código - Factory Method</h2>
+<pre><code class="language-java">
+package factory;
+
+import enums.Prioridade;
+import enums.TipoAlerta;
+import model.Notificacao;
+import model.PessoaCuidador;
+
+public abstract class NotificacaoFactory {
+    public abstract Notificacao criarNotificacao(TipoAlerta tipo, Prioridade prioridade, PessoaCuidador destinatario);
+}
+
+package factory;
+
+import enums.Prioridade;
+import enums.TipoAlerta;
+import model.Notificacao;
+import model.PessoaCuidador;
+import strategy.Email;
+import strategy.IEnvio;
+import strategy.Push;
+import strategy.SMS;
+
+public class ConcreteFactory extends NotificacaoFactory {
+
+    @Override
+    public Notificacao criarNotificacao(TipoAlerta tipo, Prioridade prioridade, PessoaCuidador destinatario) {
+        IEnvio estrategia;
+
+        switch (prioridade) {
+            case ALTA:
+                estrategia = new SMS();
+                break;
+            case MEDIA:
+                estrategia = new Email();
+                break;
+            case BAIXA:
+                estrategia = new Push();
+                break;
+            default:
+                throw new IllegalArgumentException(&quot;Prioridade inválida&quot;);
+        }
+
+        return new Notificacao(tipo, prioridade, estrategia, destinatario);
+    }
+}
+
+
+</code></pre>
+<blockquote>
+<p>A implementação da Factory Concreta não foi aplicado o padrão Composite, será assim mostrado na seção de sua devida implementação. <a href="">Acesse aqui</a></p>
+</blockquote>
 <h2 id="implementacoes-das-classes">Implementações das Classes</h2>
 <p>As implementações completas das classes mencionadas neste documento podem ser conferidas no repositório oficial do projeto, disponível em:</p>
 <p><a href="https://github.com/UnBArqDsw2025-1-Turma01/2025.1-T01-_G1_Embarcado_Entrega_03/tree/main/src/monitora">https://github.com/UnBArqDsw2025-1-Turma01/2025.1-T01-_G1_Embarcado_Entrega_03/tree/main/src/monitora</a></p>
@@ -936,10 +998,20 @@ Autores: Altino Arthur, Márcio Henrique e Daniel de Sousa
 <td style="text-align: center;">—</td>
 </tr>
 <tr>
-<td style="text-align: center;">1.2</td>
+<td style="text-align: center;">1.3</td>
 <td style="text-align: center;"><a href="https://github.com/UnBArqDsw2025-1-Turma01/2025.1-T01-_G1_Embarcado_Entrega_03/commit/07edbe22c127030721c490b54eed6a29d7400682">Ver Commit</a></td>
 <td style="text-align: center;">01/06/2025</td>
 <td style="text-align: center;">Adição da Implementação Singleton</td>
+<td style="text-align: center;"><a href="https://github.com/arthurrochamoreira">Altino Arthur</a>, <a href="https://github.com/DeM4rcio">Márcio Henrique</a> e <a href="https://github.com/daniel-de-sousa">Daniel de Sousa</a></td>
+<td style="text-align: center;"><a href="https://github.com/">Revisor</a></td>
+<td style="text-align: center;">—</td>
+<td style="text-align: center;">—</td>
+</tr>
+<tr>
+<td style="text-align: center;">1.4</td>
+<td style="text-align: center;"><a href="https://github.com/UnBArqDsw2025-1-Turma01/2025.1-T01-_G1_Embarcado_Entrega_03/commit/07edbe22c127030721c490b54eed6a29d7400682">Ver Commit</a></td>
+<td style="text-align: center;">01/06/2025</td>
+<td style="text-align: center;">Adição da Implementação Factory</td>
 <td style="text-align: center;"><a href="https://github.com/arthurrochamoreira">Altino Arthur</a>, <a href="https://github.com/DeM4rcio">Márcio Henrique</a> e <a href="https://github.com/daniel-de-sousa">Daniel de Sousa</a></td>
 <td style="text-align: center;"><a href="https://github.com/">Revisor</a></td>
 <td style="text-align: center;">—</td>
