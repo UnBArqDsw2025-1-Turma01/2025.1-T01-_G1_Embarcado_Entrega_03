@@ -863,10 +863,7 @@
 <p>Para a utilização do padrão Singleton, foi inicialmente considerada a possibilidade de instanciar múltiplos objetos da classe RegistradorLog, como nos serviços de monitoramento e análise de quedas. No entanto, essa abordagem foi descartada, pois poderia resultar em registros inconsistentes, duplicados ou até mesmo em conflitos de concorrência durante o processo de log.</p>
 <p>Com o Singleton, todos os eventos, sejam quedas detectadas, notificações enviadas ou erros internos seriam registrados por meio de uma única instância. Isso evitaria duplicações de log, inconsistências e problemas de concorrência que poderiam surgir caso diferentes partes do sistema tentassem gerenciar seus próprios registros de forma independente. Assim, qualquer componente do sistema que precisasse registrar um evento acessaria a instância única de RegistradorLog por meio do método estático getInstance(), garantindo a coesão do registro de eventos no sistema.</p>
 <hr />
-<p><br></p>
-<div class="image-embed-container" data-image-path="../../assets/singleton.png" data-title="Singleton" style="height: 70vh;"></div>
-
-<p><br></p>
+<p><img alt="Singleton" src="../../assets/singleton.png" /></p>
 <div style="text-align:center;">
 Autores: Altino Arthur, Márcio Henrique e Daniel de Sousa
 </div>
@@ -942,8 +939,7 @@ Autores: Altino Arthur, Márcio Henrique e Daniel de Sousa
 </div>
 
 <h2 id="resultados-dos-testes-singleton-do-registradorlog">Resultados dos Testes Singleton do RegistradorLog</h2>
-<div class="image-embed-container" data-image-path="../../assets/test_singleton.png" data-title="Singleton" style="height: 70vh;"></div>
-
+<p><img alt="Testes Singleton" src="../../assets/test_singleton.png" /></p>
 <div style="text-align:center;">
 Autores: Altino Arthur, Márcio Henrique e Daniel de Sousa
 </div>
@@ -953,10 +949,7 @@ Autores: Altino Arthur, Márcio Henrique e Daniel de Sousa
 <p>Para a utilização do padrão Factory Method, foi inicialmente considerada a possibilidade de instanciar diretamente objetos da classe Notificacao (ou suas subclasses concretas, como NotificacaoSMS, NotificacaoEmail, etc.) em diversos pontos do sistema. No entanto, essa abordagem foi descartada, pois implicaria em um acoplamento forte entre o código cliente (que solicita a notificação) e as classes concretas de Notificacao. Isso tornaria o sistema rígido a mudanças, dificultando a introdução de novos tipos de notificação ou a modificação dos existentes, pois cada alteração exigiria modificações em múltiplos locais do código.</p>
 <p>Com o Factory Method, a criação de objetos Notificacao é centralizada e delegada à NotificacaoFactory e suas subclasses concretas, como a ConcreteFactory. Isso permite que o sistema crie diferentes tipos de notificações (por exemplo, NotificacaoSMS, NotificacaoEmail, NotificacaoApp) sem que o código cliente precise saber qual classe concreta está sendo instanciada. A ConcreteFactory encapsula a lógica de criação, decidindo qual tipo de Notificacao será produzido com base nos parâmetros fornecidos (tipo, prioridade, destinatário). Assim, qualquer componente do sistema que precise enviar uma notificação simplesmente "chama" o método criarNotificacao() da fábrica.</p>
 <hr />
-<p><br></p>
-<div class="image-embed-container" data-image-path="../../assets/fabric.png" data-title="Factory" style="height: 70vh;"></div>
-
-<p><br></p>
+<p><img alt="Factory" src="../../assets/fabric.png" /></p>
 <div style="text-align:center;">
 Autores: Altino Arthur, Márcio Henrique e Daniel de Sousa
 </div>
